@@ -15,7 +15,7 @@ jobs:
         uses: dell/common-github-actions/go-code-formatter-linter-vetter@main
         with:
           directories: ./...
-    go_security_scan:
+  go_security_scan:
     name: Go security
     runs-on: ubuntu-latest
     steps:
@@ -25,7 +25,7 @@ jobs:
         uses: securego/gosec@master
         with:
           args: ./...
-    malware_security_scan:
+  malware_security_scan:
     name: Malware Scanner
     runs-on: ubuntu-latest
     steps:
