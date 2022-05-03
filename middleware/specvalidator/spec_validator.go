@@ -847,11 +847,11 @@ func setPathLimit(defaultValue int) int {
 	if found && maxPathLimitStr != "" {
 		maxPathLimit, err := strconv.Atoi(maxPathLimitStr)
 		if err != nil {
-			log.Errorf("Unable to convert maxPathLimit, using the default value for pathLimit: %s", defaultPathLimit)
+			log.Errorf("Unable to convert maxPathLimit, using the default value for pathLimit: %d", defaultPathLimit)
 			return defaultPathLimit
 		}
 		pathLimit = maxPathLimit
-		log.Debug("MaxpathLimit: %d ", pathLimit)
+		log.Debug("MaxpathLimit: ", pathLimit)
 	}
 	return pathLimit
 }
