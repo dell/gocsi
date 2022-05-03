@@ -807,18 +807,7 @@ func validateFieldSizes(msg interface{}) error {
 			for _, k := range f.MapKeys() {
 				if k.Kind() == reflect.String {
 					if k.String() == "Path" {
-						maxPathLimit, found := os.LookupEnv(MaxPathLimit)
-						if found {
-							if maxPathLimit != "" {
-								pathLimit, err := strconv.Atoi(maxPathLimit)
-								if err != nil {
-									return status.Errorf(
-										codes.InvalidArgument,
-										"invalid conversion: %s: %s", k.String(), maxPathLimit)
-								}
-								maxFieldLen = pathLimit
-							}
-						}
+						maxFieldLen = setPathLimit(maxFieldString)
 					}
 					kl := k.Len()
 					if kl > maxFieldLen {
@@ -849,4 +838,20 @@ func validateFieldSizes(msg interface{}) error {
 		}
 	}
 	return nil
+}
+
+func setPathLimit(defaultValue int) int {
+	var pathLimit int
+	defaultPathLimit := defaultValue
+	maxPathLimitStr, found := os.LookupEnv(MaxPathLimit)
+	if found && maxPathLimitStr != "" {
+		maxPathLimit, err := strconv.Atoi(maxPathLimitStr)
+		if err != nil {
+			log.Errorf("Unable to convert maxPathLimit, using the default value for pathLimit: %s", defaultPathLimit)
+			return defaultPathLimit
+		}
+		pathLimit = maxPathLimit
+		log.Debug("MaxpathLimit: %d ", pathLimit)
+	}
+	return pathLimit
 }
