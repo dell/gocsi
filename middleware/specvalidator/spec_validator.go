@@ -852,6 +852,8 @@ func setPathLimit(defaultValue int) int {
 		}
 		pathLimit = maxPathLimit
 		log.Debug("MaxpathLimit: ", pathLimit)
+	} else {
+		return defaultPathLimit
 	}
 	return pathLimit
 }
