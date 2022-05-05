@@ -808,6 +808,8 @@ func validateFieldSizes(msg interface{}) error {
 				if k.Kind() == reflect.String {
 					if k.String() == "Path" {
 						maxFieldLen = setPathLimit(maxFieldString)
+					} else {
+						maxFieldLen = maxFieldString
 					}
 					kl := k.Len()
 					if kl > maxFieldLen {
@@ -841,19 +843,17 @@ func validateFieldSizes(msg interface{}) error {
 }
 
 func setPathLimit(defaultValue int) int {
-	var pathLimit int
-	defaultPathLimit := defaultValue
+	pathLimit := defaultValue
 	maxPathLimitStr, found := os.LookupEnv(MaxPathLimit)
 	if found && maxPathLimitStr != "" {
 		maxPathLimit, err := strconv.Atoi(maxPathLimitStr)
-		if err != nil {
-			log.Errorf("Unable to convert maxPathLimit, using the default value for pathLimit: %d", defaultPathLimit)
-			return defaultPathLimit
+		if err == nil {
+			log.Debug("PathLimit: ", maxPathLimit)
+			return maxPathLimit
+		} else {
+			log.Errorf("Unable to convert maxPathLimit, using the default value for pathLimit: %d", pathLimit)
 		}
-		pathLimit = maxPathLimit
-		log.Debug("MaxpathLimit: ", pathLimit)
-	} else {
-		return defaultPathLimit
 	}
+	log.Debug("PathLimit: ", pathLimit)
 	return pathLimit
 }
