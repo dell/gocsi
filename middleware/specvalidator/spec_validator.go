@@ -850,9 +850,8 @@ func setPathLimit(defaultValue int) int {
 		if err == nil {
 			log.Debug("PathLimit: ", maxPathLimit)
 			return maxPathLimit
-		} else {
-			log.Errorf("Unable to convert maxPathLimit, using the default value for pathLimit: %d", pathLimit)
 		}
+		log.Errorf("Unable to convert maxPathLimit, using the default value for pathLimit: %d", pathLimit)
 	}
 	log.Debug("PathLimit: ", pathLimit)
 	return pathLimit
