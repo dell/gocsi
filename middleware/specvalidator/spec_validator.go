@@ -776,7 +776,7 @@ const (
 	maxFieldMap    = 4096
 	maxFieldNodeID = 256
 	//MaxPathLimit parameter is used to limit the length of the path and is configurable.
-	MaxPathLimit = "X_CSI_MAX_PATH_LIMIT"
+	maxPathLimit = EnvVarMaxPathLimit
 )
 
 func validateFieldSizes(msg interface{}) error {
@@ -844,7 +844,7 @@ func validateFieldSizes(msg interface{}) error {
 
 func setPathLimit(defaultValue int) int {
 	pathLimit := defaultValue
-	maxPathLimitStr, found := os.LookupEnv(MaxPathLimit)
+	maxPathLimitStr, found := os.LookupEnv(maxPathLimit)
 	if found && maxPathLimitStr != "" {
 		maxPathLimit, err := strconv.Atoi(maxPathLimitStr)
 		if err == nil {
