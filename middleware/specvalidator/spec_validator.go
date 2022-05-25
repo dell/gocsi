@@ -851,7 +851,7 @@ func setPathLimit(defaultValue int) int {
 		if err == nil {
 			if maxPathLimit < 0 {
 				maxPathLimit = pathLimit
-				log.Debug("PathLimit: ", maxPathLimit)
+				log.Debug("PathLimit set to negative value, using the default value for pathLimit: ", maxPathLimit)
 				return maxPathLimit
 			}
 			log.Debug("PathLimit: ", maxPathLimit)
