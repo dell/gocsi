@@ -44,12 +44,12 @@ func WithLockProvider(p mwtypes.VolumeLockerProvider) Option {
 // that provides serial access to volume resources across the following
 // RPCs:
 //
-//  * CreateVolume
-//  * DeleteVolume
-//  * ControllerPublishVolume
-//  * ControllerUnpublishVolume
-//  * NodePublishVolume
-//  * NodeUnpublishVolume
+//   - CreateVolume
+//   - DeleteVolume
+//   - ControllerPublishVolume
+//   - ControllerUnpublishVolume
+//   - NodePublishVolume
+//   - NodeUnpublishVolume
 func New(opts ...Option) grpc.UnaryServerInterceptor {
 
 	i := &interceptor{}

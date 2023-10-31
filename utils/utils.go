@@ -115,7 +115,7 @@ func ParseProtoAddr(protoAddr string) (proto string, addr string, err error) {
 
 // ParseMap parses a string into a map. The string's expected pattern is:
 //
-//         KEY1=VAL1, "KEY2=VAL2 ", "KEY 3= VAL3"
+//	KEY1=VAL1, "KEY2=VAL2 ", "KEY 3= VAL3"
 //
 // The key/value pairs are separated by a comma and optional whitespace.
 // Please see the encoding/csv package (https://goo.gl/1j1xb9) for information
@@ -157,7 +157,7 @@ func ParseMap(line string) map[string]string {
 
 // ParseSlice parses a string into a slice. The string's expected pattern is:
 //
-//         VAL1, "VAL2 ", " VAL3 "
+//	VAL1, "VAL2 ", " VAL3 "
 //
 // The values are separated by a comma and optional whitespace. Please see
 // the encoding/csv package (https://goo.gl/1j1xb9) for information on how to
@@ -184,7 +184,7 @@ func ParseSlice(line string) []string {
 
 // ParseMapWS parses a string into a map. The string's expected pattern is:
 //
-//         KEY1=VAL1 KEY2="VAL2 " "KEY 3"=' VAL3'
+//	KEY1=VAL1 KEY2="VAL2 " "KEY 3"=' VAL3'
 //
 // The key/value pairs are separated by one or more whitespace characters.
 // Keys and/or values with whitespace should be quoted with either single

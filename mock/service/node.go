@@ -135,7 +135,7 @@ func (s *service) NodeGetVolumeStats(
 
 	return &csi.NodeGetVolumeStatsResponse{
 		Usage: []*csi.VolumeUsage{
-			&csi.VolumeUsage{
+			{
 				Available: int64(float64(f.CapacityBytes) * 0.6),
 				Total:     f.CapacityBytes,
 				Used:      int64(float64(f.CapacityBytes) * 0.4),

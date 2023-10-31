@@ -80,16 +80,16 @@ func WithSetenv(ctx context.Context, f setenvFunc) context.Context {
 
 // LookupEnv returns the value of the provided environment variable by:
 //
-//   1. Inspecting the context for a key "os.Environ" with a string
-//      slice value. If such a key and value exist then the string slice
-//      is searched for the specified key and if found its value is returned.
+//  1. Inspecting the context for a key "os.Environ" with a string
+//     slice value. If such a key and value exist then the string slice
+//     is searched for the specified key and if found its value is returned.
 //
-//   2. Inspecting the context for a key "os.LookupEnv" with a value of
-//      func(string) (string, bool). If such a key and value exist then the
-//      function is used to attempt to discover the key's value. If the
-//      key and value are found they are returned.
+//  2. Inspecting the context for a key "os.LookupEnv" with a value of
+//     func(string) (string, bool). If such a key and value exist then the
+//     function is used to attempt to discover the key's value. If the
+//     key and value are found they are returned.
 //
-//   3. Returning the result of os.LookupEnv.
+//  3. Returning the result of os.LookupEnv.
 func LookupEnv(ctx context.Context, key string) (string, bool) {
 	if s, ok := ctx.Value(ctxOSEnviron).([]string); ok {
 		for _, v := range s {

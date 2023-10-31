@@ -422,7 +422,7 @@ var _ = Describe("AreVolumeCapabilitiesCompatible", func() {
 			},
 		}
 		a := []*csi.VolumeCapability{
-			&csi.VolumeCapability{
+			{
 				AccessMode: &csi.VolumeCapability_AccessMode{
 					Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
 				},
@@ -431,7 +431,7 @@ var _ = Describe("AreVolumeCapabilitiesCompatible", func() {
 		}
 
 		b := []*csi.VolumeCapability{
-			&csi.VolumeCapability{
+			{
 				AccessMode: &csi.VolumeCapability_AccessMode{
 					Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
 				},
@@ -439,7 +439,7 @@ var _ = Describe("AreVolumeCapabilitiesCompatible", func() {
 					Block: &csi.VolumeCapability_BlockVolume{},
 				},
 			},
-			&csi.VolumeCapability{
+			{
 				AccessMode: &csi.VolumeCapability_AccessMode{
 					Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
 				},
