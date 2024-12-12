@@ -451,3 +451,11 @@ func (s *service) ControllerGetVolume(
 ) {
 	return nil, status.Error(codes.Unimplemented, "")
 }
+
+func (s *service) ControllerModifyVolume(
+	_ context.Context,
+	_ *csi.ControllerModifyVolumeRequest) (
+	*csi.ControllerModifyVolumeResponse, error,
+) {
+	return nil, status.Error(codes.Unimplemented, "")
+}
