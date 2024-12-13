@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/akutz/gosync v0.1.0
 	github.com/akutz/memconn v0.1.0
-	github.com/container-storage-interface/spec v1.11.0
+	github.com/container-storage-interface/spec v1.6.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.10.1
 	github.com/sirupsen/logrus v1.9.3
