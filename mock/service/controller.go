@@ -22,7 +22,7 @@ func (s *service) CreateVolume(
 ) {
 	if len(req.Name) > 128 {
 		return nil, status.Errorf(codes.InvalidArgument,
-			"exceeds size limit: Name: max=128, size=%d", len(req.Name)))
+			"exceeds size limit: Name: max=128, size=%d", len(req.Name))
 	}
 
 	for k, v := range req.Parameters {
