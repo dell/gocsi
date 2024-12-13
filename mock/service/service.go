@@ -41,6 +41,8 @@ type service struct {
 	volsNID  uint64
 	snapsNID uint64
 	csi.UnimplementedControllerServer
+	csi.UnimplementedIdentityServer
+	csi.UnimplementedNodeServer
 }
 
 // New returns a new Service.
