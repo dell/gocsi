@@ -20,7 +20,6 @@ func (s *service) CreateVolume(
 	req *csi.CreateVolumeRequest) (
 	*csi.CreateVolumeResponse, error,
 ) {
-
 	if len(req.Name) > 128 {
 		return nil, status.Errorf(codes.InvalidArgument,
 			fmt.Sprintf("exceeds size limit: Name: max=128, size=%d", len(req.Name)))
@@ -29,12 +28,12 @@ func (s *service) CreateVolume(
 	for k, v := range req.Parameters {
 		if len(k) > 128 {
 			return nil, status.Errorf(codes.InvalidArgument,
-				fmt.Sprintf("exceeds size limit: Parameters[%s]: max=128, size=%d", k, len(k)))
+				"exceeds size limit: Parameters[%s]: max=128, size=%d", k, len(k))
 		}
 
 		if len(v) > 128 {
 			return nil, status.Errorf(codes.InvalidArgument,
-				fmt.Sprintf("exceeds size limit: Parameters[%s]: max=128, size=%d", k, len(v)))
+				"exceeds size limit: Parameters[%s]: max=128, size=%d", k, len(v))
 		}
 	}
 
