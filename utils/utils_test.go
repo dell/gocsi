@@ -178,10 +178,10 @@ var _ = Describe("GetCSIEndpoint", func() {
 					"open %[1]s: no such file or directory",
 				expEndpoint)))
 		}
-		Context("Xtcp5://localhost:5000", func() {
+		Context("Xtcp5:/localhost:5000", func() {
 			It("Should Be An Invalid Implied Sock File", shouldBeInvalid)
 		})
-		Context("Xunixpcket://path/to/sock.sock", func() {
+		Context("Xunixpcket:/path/to/sock.sock", func() {
 			It("Should Be An Invalid Implied Sock File", shouldBeInvalid)
 		})
 	})
