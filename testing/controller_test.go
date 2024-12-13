@@ -293,7 +293,7 @@ var _ = Describe("Controller", func() {
 					Ω(vol).Should(BeNil())
 					Ω(err).Should(ΣCM(
 						codes.InvalidArgument,
-						"exceeds size limit: Parameters[class]=: max=128, size=129"))
+						"exceeds size limit: Parameters[class]: max=128, size=129"))
 				})
 			})
 			Context("Invalid Params Map", func() {
