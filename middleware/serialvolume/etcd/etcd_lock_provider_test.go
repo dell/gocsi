@@ -13,17 +13,63 @@ import (
 
 	csietcd "github.com/dell/gocsi/middleware/serialvolume/etcd"
 	mwtypes "github.com/dell/gocsi/middleware/serialvolume/types"
+	"go.etcd.io/etcd/server/v3/embed"
 )
 
 var p mwtypes.VolumeLockerProvider
 
 func TestMain(m *testing.M) {
 	log.SetLevel(log.InfoLevel)
+
+	e, err := startEtcd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	<-e.Server.ReadyNotify()
+
+	os.Setenv(csietcd.EnvVarEndpoints, "localhost:2379")
+	defer os.Unsetenv(csietcd.EnvVarEndpoints)
+
+	os.Setenv(csietcd.EnvVarAutoSyncInterval, "10s")
+	defer os.Unsetenv(csietcd.EnvVarAutoSyncInterval)
+
+	os.Setenv(csietcd.EnvVarDialKeepAliveTimeout, "10s")
+	defer os.Unsetenv(csietcd.EnvVarDialKeepAliveTimeout)
+
+	os.Setenv(csietcd.EnvVarDialKeepAliveTime, "10s")
+	defer os.Unsetenv(csietcd.EnvVarDialKeepAliveTime)
+
+	os.Setenv(csietcd.EnvVarDialTimeout, "10s")
+	defer os.Unsetenv(csietcd.EnvVarDialTimeout)
+
+	os.Setenv(csietcd.EnvVarMaxCallRecvMsgSz, "0")
+	defer os.Unsetenv(csietcd.EnvVarMaxCallRecvMsgSz)
+
+	os.Setenv(csietcd.EnvVarMaxCallSendMsgSz, "0")
+	defer os.Unsetenv(csietcd.EnvVarMaxCallSendMsgSz)
+
+	/*
+		os.Setenv(csietcd.EnvVarUsername, "0")
+		defer os.Unsetenv(csietcd.EnvVarUsername)
+
+		os.Setenv(csietcd.EnvVarPassword, "0")
+		defer os.Unsetenv(csietcd.EnvVarPassword)
+	*/
+
+	os.Setenv(csietcd.EnvVarRejectOldCluster, "false")
+	defer os.Unsetenv(csietcd.EnvVarRejectOldCluster)
+
+	os.Setenv(csietcd.EnvVarTLS, "false")
+	defer os.Unsetenv(csietcd.EnvVarTLS)
+
+	os.Setenv(csietcd.EnvVarTLSInsecure, "true")
+	defer os.Unsetenv(csietcd.EnvVarTLS)
+
 	if os.Getenv(csietcd.EnvVarEndpoints) == "" {
+		fmt.Println("skipping")
 		os.Exit(0)
 	}
 	os.Setenv(csietcd.EnvVarDialTimeout, "1s")
-	var err error
 	p, err = csietcd.New(context.TODO(), "/gocsi/etcd", 0, nil)
 	if err != nil {
 		log.Fatalln(err)
@@ -162,4 +208,14 @@ func ExampleTryMutex_TryLock_timeout() {
 	}
 
 	// Output: lock not obtained
+}
+
+func startEtcd() (*embed.Etcd, error) {
+	cfg := embed.NewConfig()
+	cfg.Dir = "/tmp/etcd-data"
+	e, err := embed.StartEtcd(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
 }
