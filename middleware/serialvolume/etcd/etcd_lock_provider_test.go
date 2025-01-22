@@ -2,8 +2,16 @@ package etcd_test
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"fmt"
 	"io"
+	"math/big"
+	"net/url"
 	"os"
 	"sync"
 	"testing"
@@ -13,23 +21,68 @@ import (
 
 	csietcd "github.com/dell/gocsi/middleware/serialvolume/etcd"
 	mwtypes "github.com/dell/gocsi/middleware/serialvolume/types"
+	"go.etcd.io/etcd/client/pkg/v3/transport"
+	"go.etcd.io/etcd/server/v3/embed"
 )
 
 var p mwtypes.VolumeLockerProvider
 
 func TestMain(m *testing.M) {
 	log.SetLevel(log.InfoLevel)
+
+	cert, key, err := generateCertificate()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// can't user defer since this func uses os.Exit
+	cleanup := func() {
+		os.Remove(cert)
+		os.Remove(key)
+		os.Unsetenv(csietcd.EnvVarEndpoints)
+		os.Unsetenv(csietcd.EnvVarAutoSyncInterval)
+		os.Unsetenv(csietcd.EnvVarDialKeepAliveTimeout)
+		os.Unsetenv(csietcd.EnvVarDialKeepAliveTime)
+		os.Unsetenv(csietcd.EnvVarDialTimeout)
+		os.Unsetenv(csietcd.EnvVarMaxCallRecvMsgSz)
+		os.Unsetenv(csietcd.EnvVarMaxCallSendMsgSz)
+		os.Unsetenv(csietcd.EnvVarTTL)
+		os.Unsetenv(csietcd.EnvVarRejectOldCluster)
+		os.Unsetenv(csietcd.EnvVarTLS)
+		os.Unsetenv(csietcd.EnvVarTLSInsecure)
+		os.Unsetenv(csietcd.EnvVarDialTimeout)
+	}
+
+	e, err := startEtcd(cert, key)
+	if err != nil {
+		log.Fatal(err)
+	}
+	<-e.Server.ReadyNotify()
+
+	os.Setenv(csietcd.EnvVarEndpoints, "https://127.0.0.1:2379")
+	os.Setenv(csietcd.EnvVarAutoSyncInterval, "10s")
+	os.Setenv(csietcd.EnvVarDialKeepAliveTimeout, "10s")
+	os.Setenv(csietcd.EnvVarDialKeepAliveTime, "10s")
+	os.Setenv(csietcd.EnvVarDialTimeout, "1s")
+	os.Setenv(csietcd.EnvVarDialTimeout, "10s")
+	os.Setenv(csietcd.EnvVarMaxCallRecvMsgSz, "0")
+	os.Setenv(csietcd.EnvVarMaxCallSendMsgSz, "0")
+	os.Setenv(csietcd.EnvVarTTL, "10s")
+	os.Setenv(csietcd.EnvVarRejectOldCluster, "false")
+	os.Setenv(csietcd.EnvVarTLS, "true")
+	os.Setenv(csietcd.EnvVarTLSInsecure, "true")
+
 	if os.Getenv(csietcd.EnvVarEndpoints) == "" {
 		os.Exit(0)
 	}
-	os.Setenv(csietcd.EnvVarDialTimeout, "1s")
-	var err error
+
 	p, err = csietcd.New(context.TODO(), "/gocsi/etcd", 0, nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	exitCode := m.Run()
 	p.(io.Closer).Close()
+	cleanup()
 	os.Exit(exitCode)
 }
 
@@ -39,6 +92,7 @@ func TestTryMutex_Lock(t *testing.T) {
 		id    = t.Name()
 		wait  sync.WaitGroup
 		ready = make(chan struct{}, 5)
+		mu    sync.Mutex // Mutex to protect access to i
 	)
 
 	// Wait for the goroutines with the other mutexes to finish, otherwise
@@ -81,7 +135,9 @@ func TestTryMutex_Lock(t *testing.T) {
 
 			ready <- struct{}{}
 			m.Lock()
+			mu.Lock()
 			i++
+			mu.Unlock()
 		}()
 	}
 
@@ -162,4 +218,78 @@ func ExampleTryMutex_TryLock_timeout() {
 	}
 
 	// Output: lock not obtained
+}
+
+func startEtcd(cert string, key string) (*embed.Etcd, error) {
+	cfg := embed.NewConfig()
+	cfg.Dir = "/tmp/etcd-data"
+	cfg.ListenClientUrls = []url.URL{{Scheme: "https", Host: "127.0.0.1:2379"}}
+	cfg.ClientTLSInfo = transport.TLSInfo{
+		CertFile: cert,
+		KeyFile:  key,
+	}
+	cfg.PeerTLSInfo = transport.TLSInfo{
+		CertFile: cert,
+		KeyFile:  key,
+	}
+	cfg.ClientAutoTLS = false
+	cfg.PeerAutoTLS = false
+
+	e, err := embed.StartEtcd(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
+func generateCertificate() (string, string, error) {
+	cert := "cert.pem"
+	key := "key.pem"
+
+	// Generate a private key
+	priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return "", "", err
+	}
+
+	// Create a template for the certificate
+	template := x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject: pkix.Name{
+			Organization: []string{"Dell"},
+		},
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().Add(365 * 24 * time.Hour),
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+	}
+
+	// Create the certificate
+	certDER, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
+	if err != nil {
+		return "", "", err
+	}
+
+	// Save the certificate to a file
+	certOut, err := os.Create(cert)
+	if err != nil {
+		return "", "", err
+	}
+	pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: certDER})
+	certOut.Close()
+
+	// Save the private key to a file
+	keyOut, err := os.Create(key)
+	if err != nil {
+		return "", "", err
+	}
+	privBytes, err := x509.MarshalECPrivateKey(priv)
+	if err != nil {
+		return "", "", err
+	}
+	pem.Encode(keyOut, &pem.Block{Type: "EC PRIVATE KEY", Bytes: privBytes})
+	keyOut.Close()
+
+	return cert, key, nil
 }

@@ -2,9 +2,13 @@ package logging
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"io"
 	"os"
 	"testing"
+
+	"github.com/container-storage-interface/spec/lib/go/csi"
 )
 
 func TestWithRequestLogging(t *testing.T) {
@@ -115,6 +119,64 @@ func TestWithDisableLogVolumeContext(t *testing.T) {
 			// Check interceptor type opts to verify WithDisableLogVolumeContext switched or didn't switch
 			if i.opts.disableLogVolCtx != tt.want {
 				t.Errorf("WithResponseLogging() returned function with parameters = %v, want function with parameters %v", i.opts, tt.want)
+			}
+		})
+	}
+}
+
+func TestHandle(t *testing.T) {
+	w := &bytes.Buffer{}
+
+	// Create a mock context
+	ctx := context.Background()
+
+	// Create a mock method
+	method := "example.ExampleMethod"
+
+	// Empty request for interceptor to log
+	req := &csi.CreateVolumeRequest{}
+
+	// Empty response for interceptor to log
+	rep := &csi.CreateVolumeResponse{}
+
+	// Mock error to be returned by next function
+	err := errors.New("example error")
+
+	// Create a mock next function
+	next := func() (interface{}, error) {
+		return rep, err
+	}
+	tests := []struct {
+		name string
+		i    *interceptor
+	}{
+		{
+			name: "request and response disabled",
+			i:    &interceptor{},
+		},
+		{
+			name: "request enabled",
+			i:    newLoggingInterceptor(WithRequestLogging(w)),
+		},
+		{
+			name: "response enabled",
+			i:    newLoggingInterceptor(WithResponseLogging(w)),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Call the handle function
+			result, resultErr := tt.i.handle(ctx, method, req, next)
+
+			// Check if the result is expected
+			if result != rep {
+				t.Errorf("Expected result to be %v, got %v", rep, result)
+			}
+
+			// Check if the error is expected
+			if resultErr != err {
+				t.Errorf("Expected error to be %v, got %v", err, resultErr)
 			}
 		})
 	}
