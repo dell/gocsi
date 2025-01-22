@@ -1,13 +1,13 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"sync"
 	"sync/atomic"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
-	"golang.org/x/net/context"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -33,6 +33,7 @@ type MockServer interface {
 
 type MockClient interface {
 	csi.ControllerClient
+	csi.NodeClient
 }
 
 type service struct {

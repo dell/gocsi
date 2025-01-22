@@ -20,6 +20,9 @@ func TestControllerCmd(t *testing.T) {
 	err := child.PersistentPreRunE(child, []string{})
 	assert.NoError(t, err)
 
+	// save original func so we can revert
+	cmd := RootCmd.PersistentPreRunE
+
 	// test case: error
 	// force RootCmd to return error
 	RootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
@@ -28,6 +31,8 @@ func TestControllerCmd(t *testing.T) {
 	err = child.PersistentPreRunE(child, []string{})
 	assert.Error(t, err)
 
+	// restore original func back so other UT won't fail
+	RootCmd.PersistentPreRunE = cmd
 }
 
 func TestCreateSnapshotCmd(t *testing.T) {
