@@ -34,6 +34,7 @@ type MockServer interface {
 type MockClient interface {
 	csi.ControllerClient
 	csi.NodeClient
+	csi.IdentityClient
 }
 
 type service struct {
