@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/dell/gocsi/utils"
 	"golang.org/x/net/context"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -56,13 +57,17 @@ func NewServer() MockServer {
 
 	// add some mock volumes to start with
 	s.vols = []csi.Volume{
-		s.newVolume("Mock Volume 1", gib100),
-		s.newVolume("Mock Volume 2", gib100),
-		s.newVolume("Mock Volume 3", gib100),
+		s.newVolume("Mock Volume 1", utils.Gib100),
+		s.newVolume("Mock Volume 2", utils.Gib100),
+		s.newVolume("Mock Volume 3", utils.Gib100),
 	}
 
 	// add some mock snapshots to start with, too
-	s.snaps = []csi.Snapshot{}
+	s.snaps = []csi.Snapshot{
+		s.newSnapshot("Mock Snapshot 1", utils.Gib100),
+		s.newSnapshot("Mock Snapshot 2", utils.Gib100),
+		s.newSnapshot("Mock Snapshot 3", utils.Gib100),
+	}
 	return s
 }
 
@@ -71,15 +76,6 @@ func NewClient() MockClient {
 		service: NewServer(),
 	}
 }
-
-const (
-	kib    int64 = 1024
-	mib    int64 = kib * 1024
-	gib    int64 = mib * 1024
-	gib100 int64 = gib * 100
-	tib    int64 = gib * 1024
-	tib100 int64 = tib * 100
-)
 
 func (s *service) newVolume(name string, capcity int64) csi.Volume {
 	return csi.Volume{

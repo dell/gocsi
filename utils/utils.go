@@ -27,6 +27,16 @@ import (
 // contains the CSI endpoint.
 const CSIEndpoint = "CSI_ENDPOINT"
 
+// Volume Sizes
+const (
+	Kib    int64 = 1024
+	Mib    int64 = Kib * 1024
+	Gib    int64 = Mib * 1024
+	Gib100 int64 = Gib * 100
+	Tib    int64 = Gib * 1024
+	Tib100 int64 = Tib * 100
+)
+
 // GetCSIEndpoint returns the network address specified by the
 // environment variable CSI_ENDPOINT.
 func GetCSIEndpoint() (network, addr string, err error) {

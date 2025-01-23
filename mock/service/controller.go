@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/dell/gocsi/utils"
 )
 
 func (s *serviceClient) CreateVolume(
@@ -53,7 +54,7 @@ func (s *service) CreateVolume(
 	}
 
 	// If no capacity is specified then use 100GiB
-	capacity := gib100
+	capacity := utils.Gib100
 	if cr := req.CapacityRange; cr != nil {
 		if rb := cr.RequiredBytes; rb > 0 {
 			capacity = rb
@@ -320,7 +321,7 @@ func (s *service) GetCapacity(
 	*csi.GetCapacityResponse, error,
 ) {
 	return &csi.GetCapacityResponse{
-		AvailableCapacity: tib100,
+		AvailableCapacity: utils.Tib100,
 	}, nil
 }
 
@@ -398,7 +399,7 @@ func (s *service) CreateSnapshot(
 	req *csi.CreateSnapshotRequest) (
 	*csi.CreateSnapshotResponse, error,
 ) {
-	snap := s.newSnapshot(req.Name, tib)
+	snap := s.newSnapshot(req.Name, utils.Tib)
 	s.snapsRWL.Lock()
 	defer s.snapsRWL.Unlock()
 	s.snaps = append(s.snaps, snap)

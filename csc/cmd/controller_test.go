@@ -9,6 +9,7 @@ import (
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/dell/gocsi/mock/service"
+	"github.com/dell/gocsi/utils"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
@@ -97,4 +98,292 @@ func TestCreateVolumeCmd(t *testing.T) {
 	assert.Error(t, err)
 
 	// TODO: more error test cases
+}
+
+func TestDeleteSnapshotCmd(t *testing.T) {
+	child := deleteSnapshotCmd
+	// set up root as required
+	root.ctx = context.Background()
+	root.timeout = 10 * time.Second
+	tpl, err := template.New("t").Funcs(template.FuncMap{
+		"isa": func(o interface{}, t string) bool {
+			return fmt.Sprintf("%T", o) == t
+		},
+	}).Parse(root.format)
+	assert.NoError(t, err)
+	root.tpl = tpl
+
+	// set up the CSI client with a mock
+	controller.client = service.NewClient()
+
+	// Valid test case
+	err = child.RunE(RootCmd, []string{"testname"})
+	assert.NoError(t, err)
+
+	// TODO: error cases: force controller.client.DeleteSnapshot to return an error
+}
+
+func TestDeleteVolumeCmd(t *testing.T) {
+	child := deleteVolumeCmd
+	// set up root as required
+	root.ctx = context.Background()
+	root.timeout = 10 * time.Second
+	tpl, err := template.New("t").Funcs(template.FuncMap{
+		"isa": func(o interface{}, t string) bool {
+			return fmt.Sprintf("%T", o) == t
+		},
+	}).Parse(root.format)
+	assert.NoError(t, err)
+	root.tpl = tpl
+
+	// set up the CSI client with a mock
+	controller.client = service.NewClient()
+
+	// Valid test case
+	err = child.RunE(RootCmd, []string{"testname"})
+	assert.NoError(t, err)
+
+	// TODO: error cases: force controller.client.DeleteVolume to return an error
+}
+
+func TestExpandVolumeCmd(t *testing.T) {
+	child := expandVolumeCmd
+	// set up root as required
+	root.ctx = context.Background()
+	root.timeout = 10 * time.Second
+	tpl, err := template.New("t").Funcs(template.FuncMap{
+		"isa": func(o interface{}, t string) bool {
+			return fmt.Sprintf("%T", o) == t
+		},
+	}).Parse(root.format)
+	assert.NoError(t, err)
+	root.tpl = tpl
+
+	// set up the CSI client with a mock
+	controller.client = service.NewClient()
+
+	// Valid test case
+	expandVolume.reqBytes = 2 * utils.Gib100
+	expandVolume.limBytes = 3 * utils.Gib100
+	expandVolume.volCap = volumeCapabilitySliceArg{data: []*csi.VolumeCapability{{AccessType: &csi.VolumeCapability_Mount{Mount: &csi.VolumeCapability_MountVolume{}}}}}
+	err = child.RunE(RootCmd, []string{"1"}) // uses volume ID, which starts at 1 with our mocks
+	assert.NoError(t, err)
+
+	// TODO: error cases: force controller.client.ExpandVolume to return an error
+}
+
+func TestGetCapabilitiesCmd(t *testing.T) {
+	child := controllerGetCapabilitiesCmd
+	// set up root as required
+	root.ctx = context.Background()
+	root.timeout = 10 * time.Second
+	tpl, err := template.New("t").Funcs(template.FuncMap{
+		"isa": func(o interface{}, t string) bool {
+			return fmt.Sprintf("%T", o) == t
+		},
+	}).Parse(root.format)
+	assert.NoError(t, err)
+	root.tpl = tpl
+
+	// set up the CSI client with a mock
+	controller.client = service.NewClient()
+
+	// Valid test case
+	err = child.RunE(RootCmd, []string{})
+	assert.NoError(t, err)
+
+	// TODO: error cases: force controller.client.ControllerGetCapabilities to return an error
+}
+
+func TestGetCapacityCmd(t *testing.T) {
+	child := getCapacityCmd
+	// set up root as required
+	root.ctx = context.Background()
+	root.timeout = 10 * time.Second
+	tpl, err := template.New("t").Funcs(template.FuncMap{
+		"isa": func(o interface{}, t string) bool {
+			return fmt.Sprintf("%T", o) == t
+		},
+	}).Parse(root.format)
+	assert.NoError(t, err)
+	root.tpl = tpl
+
+	// set up the CSI client with a mock
+	controller.client = service.NewClient()
+
+	// Valid test case
+	getCapacity.caps.data = []*csi.VolumeCapability{
+		{
+			AccessType: &csi.VolumeCapability_Mount{
+				Mount: &csi.VolumeCapability_MountVolume{},
+			},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
+		},
+	}
+	getCapacity.params.data = map[string]string{}
+	err = child.RunE(RootCmd, []string{})
+	assert.NoError(t, err)
+
+	// TODO: error cases: force controller.client.GetCapacity to return an error
+}
+
+func TestListSnapshotsCmd(t *testing.T) {
+	child := listSnapshotsCmd
+	// set up root as required
+	root.ctx = context.Background()
+	root.timeout = 10 * time.Second
+	tpl, err := template.New("t").Funcs(template.FuncMap{
+		"isa": func(o interface{}, t string) bool {
+			return fmt.Sprintf("%T", o) == t
+		},
+	}).Parse(root.format)
+	assert.NoError(t, err)
+	root.tpl = tpl
+
+	// set up the CSI client with a mock
+	controller.client = service.NewClient()
+
+	// Valid test case
+	listSnapshots.maxEntries = 10
+	listSnapshots.startingToken = "1"
+	listSnapshots.sourceVolumeID = "1"
+	listSnapshots.SnapshotID = "1"
+	listSnapshots.paging = true
+	err = child.RunE(RootCmd, []string{})
+	assert.NoError(t, err)
+
+	// do it again, but with paging disabled
+	listSnapshots.paging = false
+	err = child.RunE(RootCmd, []string{})
+	assert.NoError(t, err)
+
+	// TODO: error cases
+}
+
+func TestListVolumesCmd(t *testing.T) {
+	child := listVolumesCmd
+	// set up root as required
+	root.ctx = context.Background()
+	root.timeout = 10 * time.Second
+	tpl, err := template.New("t").Funcs(template.FuncMap{
+		"isa": func(o interface{}, t string) bool {
+			return fmt.Sprintf("%T", o) == t
+		},
+	}).Parse(root.format)
+	assert.NoError(t, err)
+	root.tpl = tpl
+
+	// set up the CSI client with a mock
+	controller.client = service.NewClient()
+
+	// Valid test case
+	listVolumes.maxEntries = 10
+	listVolumes.startingToken = "1"
+	listVolumes.paging = true
+	err = child.RunE(RootCmd, []string{})
+	assert.NoError(t, err)
+
+	// do it again, but with paging disabled
+	listVolumes.paging = false
+	err = child.RunE(RootCmd, []string{})
+	assert.NoError(t, err)
+
+	// TODO: error cases
+}
+
+func TestPublishVolumeCmd(t *testing.T) {
+	child := controllerPublishVolumeCmd
+	// set up root as required
+	root.ctx = context.Background()
+	root.timeout = 10 * time.Second
+	tpl, err := template.New("t").Funcs(template.FuncMap{
+		"isa": func(o interface{}, t string) bool {
+			return fmt.Sprintf("%T", o) == t
+		},
+	}).Parse(root.format)
+	assert.NoError(t, err)
+	root.tpl = tpl
+
+	// set up the CSI client with a mock
+	controller.client = service.NewClient()
+
+	// Valid test case
+	controllerPublishVolume.nodeID = "node1"
+	controllerPublishVolume.caps.data = []*csi.VolumeCapability{
+		{
+			AccessType: &csi.VolumeCapability_Mount{
+				Mount: &csi.VolumeCapability_MountVolume{},
+			},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
+		},
+	}
+	controllerPublishVolume.volCtx.data = map[string]string{}
+	controllerPublishVolume.readOnly = false
+	err = child.RunE(RootCmd, []string{"1"})
+	assert.NoError(t, err)
+
+	// TODO: error cases: force controller.client.ControllerPublishVolume to return an error
+}
+
+func TestUnpublishVolumeCmd(t *testing.T) {
+	child := controllerUnpublishVolumeCmd
+	// set up root as required
+	root.ctx = context.Background()
+	root.timeout = 10 * time.Second
+	tpl, err := template.New("t").Funcs(template.FuncMap{
+		"isa": func(o interface{}, t string) bool {
+			return fmt.Sprintf("%T", o) == t
+		},
+	}).Parse(root.format)
+	assert.NoError(t, err)
+	root.tpl = tpl
+
+	// set up the CSI client with a mock
+	controller.client = service.NewClient()
+
+	// Valid test case
+	controllerUnpublishVolume.nodeID = "node1"
+	err = child.RunE(RootCmd, []string{"1"})
+	assert.NoError(t, err)
+
+	// TODO: error cases: force controller.client.ControllerPublishVolume to return an error
+}
+
+func TestValidateVolumeCapabilitiesCmd(t *testing.T) {
+	child := valVolCapsCmd
+	// set up root as required
+	root.ctx = context.Background()
+	root.timeout = 10 * time.Second
+	tpl, err := template.New("t").Funcs(template.FuncMap{
+		"isa": func(o interface{}, t string) bool {
+			return fmt.Sprintf("%T", o) == t
+		},
+	}).Parse(root.format)
+	assert.NoError(t, err)
+	root.tpl = tpl
+
+	// set up the CSI client with a mock
+	controller.client = service.NewClient()
+
+	// Valid test case
+	valVolCaps.volCtx.data = map[string]string{}
+	valVolCaps.params.data = map[string]string{}
+	valVolCaps.caps.data = []*csi.VolumeCapability{
+		{
+			AccessType: &csi.VolumeCapability_Mount{
+				Mount: &csi.VolumeCapability_MountVolume{},
+			},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
+		},
+	}
+	err = child.RunE(RootCmd, []string{"1"})
+	assert.NoError(t, err)
+
+	// TODO: error cases: force controller.client.ValidateVolumeCapabilities to return an error
 }
