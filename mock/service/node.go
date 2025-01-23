@@ -3,6 +3,7 @@ package service
 import (
 	"path"
 
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -150,5 +151,70 @@ func (s *service) NodeExpandVolume(
 	_ *csi.NodeExpandVolumeRequest) (
 	*csi.NodeExpandVolumeResponse, error,
 ) {
+	// return nil, status.Error(codes.Unimplemented, "")
+	return &csi.NodeExpandVolumeResponse{}, nil
+}
+
+func (s *serviceClient) NodeStageVolume(
+	_ context.Context,
+	_ *csi.NodeStageVolumeRequest, _ ...grpc.CallOption) (
+	*csi.NodeStageVolumeResponse, error,
+) {
 	return nil, status.Error(codes.Unimplemented, "")
+}
+
+func (s *serviceClient) NodeUnstageVolume(
+	_ context.Context,
+	_ *csi.NodeUnstageVolumeRequest, _ ...grpc.CallOption) (
+	*csi.NodeUnstageVolumeResponse, error,
+) {
+	return nil, status.Error(codes.Unimplemented, "")
+}
+
+func (s *serviceClient) NodePublishVolume(
+	_ context.Context,
+	req *csi.NodePublishVolumeRequest, _ ...grpc.CallOption) (
+	*csi.NodePublishVolumeResponse, error,
+) {
+	return &csi.NodePublishVolumeResponse{}, nil
+}
+
+func (s *serviceClient) NodeUnpublishVolume(
+	_ context.Context,
+	req *csi.NodeUnpublishVolumeRequest, _ ...grpc.CallOption) (
+	*csi.NodeUnpublishVolumeResponse, error,
+) {
+	return &csi.NodeUnpublishVolumeResponse{}, nil
+}
+
+func (s *serviceClient) NodeGetInfo(
+	_ context.Context,
+	_ *csi.NodeGetInfoRequest, _ ...grpc.CallOption) (
+	*csi.NodeGetInfoResponse, error,
+) {
+	return &csi.NodeGetInfoResponse{}, nil
+}
+
+func (s *serviceClient) NodeGetCapabilities(
+	_ context.Context,
+	_ *csi.NodeGetCapabilitiesRequest, _ ...grpc.CallOption) (
+	*csi.NodeGetCapabilitiesResponse, error,
+) {
+	return &csi.NodeGetCapabilitiesResponse{}, nil
+}
+
+func (s *serviceClient) NodeGetVolumeStats(
+	_ context.Context,
+	req *csi.NodeGetVolumeStatsRequest, _ ...grpc.CallOption) (
+	*csi.NodeGetVolumeStatsResponse, error,
+) {
+	return &csi.NodeGetVolumeStatsResponse{}, nil
+}
+
+func (s *serviceClient) NodeExpandVolume(
+	_ context.Context,
+	_ *csi.NodeExpandVolumeRequest, _ ...grpc.CallOption) (
+	*csi.NodeExpandVolumeResponse, error,
+) {
+	return &csi.NodeExpandVolumeResponse{}, nil
 }
