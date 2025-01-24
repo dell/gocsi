@@ -160,7 +160,7 @@ func (s *serviceClient) NodeStageVolume(
 	_ *csi.NodeStageVolumeRequest, _ ...grpc.CallOption) (
 	*csi.NodeStageVolumeResponse, error,
 ) {
-	return nil, status.Error(codes.Unimplemented, "")
+	return &csi.NodeStageVolumeResponse{}, nil
 }
 
 func (s *serviceClient) NodeUnstageVolume(
@@ -168,7 +168,7 @@ func (s *serviceClient) NodeUnstageVolume(
 	_ *csi.NodeUnstageVolumeRequest, _ ...grpc.CallOption) (
 	*csi.NodeUnstageVolumeResponse, error,
 ) {
-	return nil, status.Error(codes.Unimplemented, "")
+	return &csi.NodeUnstageVolumeResponse{}, nil
 }
 
 func (s *serviceClient) NodePublishVolume(
