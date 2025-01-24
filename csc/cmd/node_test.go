@@ -3,9 +3,19 @@ package cmd
 import (
 	"testing"
 
+	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/dell/gocsi/mock/service"
 	"github.com/stretchr/testify/assert"
 )
+
+// vcs is used to simulate a slice of volume capabilities to test behavior of node commands
+var vcs volumeCapabilitySliceArg = volumeCapabilitySliceArg{data: []*csi.VolumeCapability{
+	{
+		AccessType: &csi.VolumeCapability_Mount{
+			Mount: &csi.VolumeCapability_MountVolume{},
+		},
+	},
+}}
 
 func TestNodeCmd(t *testing.T) {
 	setupRoot(t)
@@ -18,6 +28,19 @@ func TestNodeExpandVolumeCmd(t *testing.T) {
 	setupRoot(t)
 	child := nodeExpandVolumeCmd
 	err := child.RunE(RootCmd, []string{"volID", "/test/volume"})
+	assert.NoError(t, err)
+
+	// try cmd with volume capabilities
+	nodeExpandVolume.volCap = vcs
+	expandVolume.volCap = vcs
+
+	err = child.RunE(RootCmd, []string{"volID", "/test/volume"})
+	assert.NoError(t, err)
+
+	// set req and limit bytes to 1
+	nodeExpandVolume.reqBytes = 1
+	nodeExpandVolume.limBytes = 1
+	err = child.RunE(RootCmd, []string{"volID", "/test/volume"})
 	assert.NoError(t, err)
 }
 
@@ -56,6 +79,11 @@ func TestNodePublishVolume(t *testing.T) {
 	child := nodePublishVolumeCmd
 	err := child.RunE(RootCmd, []string{"mock-vol-id"})
 	assert.NoError(t, err)
+
+	// try cmd with volume capabilities
+	nodePublishVolume.caps = vcs
+	err = child.RunE(RootCmd, []string{"mock-vol-id"})
+	assert.NoError(t, err)
 }
 
 func TestNodeStageVolume(t *testing.T) {
@@ -63,6 +91,11 @@ func TestNodeStageVolume(t *testing.T) {
 	node.client = service.NewClient()
 	child := nodeStageVolumeCmd
 	err := child.RunE(RootCmd, []string{"mock-vol-id"})
+	assert.NoError(t, err)
+
+	// try cmd with volume capabilities
+	nodeStageVolume.caps = vcs
+	err = child.RunE(RootCmd, []string{"mock-vol-id"})
 	assert.NoError(t, err)
 }
 

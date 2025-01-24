@@ -200,7 +200,19 @@ func (s *serviceClient) NodeGetCapabilities(
 	_ *csi.NodeGetCapabilitiesRequest, _ ...grpc.CallOption) (
 	*csi.NodeGetCapabilitiesResponse, error,
 ) {
-	return &csi.NodeGetCapabilitiesResponse{}, nil
+	// send back one capability
+	nodeCapabalities := []*csi.NodeServiceCapability{
+		{
+			// Required for NodeExpandVolume
+			Type: &csi.NodeServiceCapability_Rpc{
+				Rpc: &csi.NodeServiceCapability_RPC{
+					Type: csi.NodeServiceCapability_RPC_EXPAND_VOLUME,
+				},
+			},
+		},
+	}
+
+	return &csi.NodeGetCapabilitiesResponse{Capabilities: nodeCapabalities}, nil
 }
 
 func (s *serviceClient) NodeGetVolumeStats(
