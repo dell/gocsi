@@ -2,7 +2,10 @@ package context
 
 import (
 	"context"
+	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetRequestID(t *testing.T) {
@@ -32,4 +35,83 @@ func TestGetRequestID(t *testing.T) {
 	   		t.Errorf("Expected request ID to be %d, got %d", requestID, actualID)
 	   	}
 	*/
+}
+
+func TestWithEnviron(t *testing.T) {
+	want := []string{"key=value"}
+
+	ctx := context.Background()
+	ctx = WithEnviron(ctx, want)
+
+	got := ctx.Value(ctxOSEnviron)
+	assert.Equal(t, want, got.([]string))
+}
+
+func TestWithLookupEnv(t *testing.T) {
+	f := lookupEnvFunc(func(key string) (string, bool) {
+		return "test", true
+	})
+
+	ctx := context.Background()
+	ctx = WithLookupEnv(ctx, f)
+
+	got := ctx.Value(ctxOSLookupEnvKey).(lookupEnvFunc)
+	gotString, gotBool := got("")
+
+	assert.Equal(t, "test", gotString)
+	assert.Equal(t, true, gotBool)
+}
+
+func TestWithSetenv(t *testing.T) {
+	f := setenvFunc(func(string, string) error {
+		return nil
+	})
+
+	ctx := context.Background()
+	ctx = WithSetenv(ctx, f)
+
+	got := ctx.Value(ctxOSSetenvKey).(setenvFunc)
+	gotErr := got("", "")
+	assert.Nil(t, gotErr)
+}
+
+func TestGetenv(t *testing.T) {
+	ctx := context.Background()
+	ctx = WithEnviron(ctx, []string{"key=value"})
+
+	v := Getenv(ctx, "key")
+	assert.Equal(t, "value", v)
+
+	ctx = context.Background()
+	ctx = WithLookupEnv(ctx, func(s string) (string, bool) {
+		return "value", true
+	})
+
+	v = Getenv(ctx, "key")
+	assert.Equal(t, "value", v)
+
+	ctx = context.Background()
+	os.Setenv("key", "value")
+	defer os.Unsetenv("key")
+
+	v = Getenv(ctx, "key")
+	assert.Equal(t, "value", v)
+}
+
+func TestSetenv(t *testing.T) {
+	f := setenvFunc(func(string, string) error {
+		return nil
+	})
+
+	ctx := context.Background()
+	ctx = WithSetenv(ctx, f)
+	err := Setenv(ctx, "key", "value")
+	assert.Nil(t, err)
+
+	ctx = context.Background()
+	err = Setenv(ctx, "key", "value")
+	defer os.Unsetenv("key")
+	assert.Nil(t, err)
+
+	assert.Equal(t, "value", os.Getenv("key"))
 }
