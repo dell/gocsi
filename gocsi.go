@@ -30,6 +30,10 @@ import (
 	"github.com/dell/gocsi/utils"
 )
 
+var osExit = func(code int) {
+	os.Exit(code)
+}
+
 // Run launches a CSI storage plug-in.
 func Run(
 	ctx context.Context,
@@ -88,18 +92,19 @@ func Run(
 	err := fs.Parse(os.Args)
 	if err == flag.ErrHelp || help {
 		printUsage()
-		os.Exit(1)
+		osExit(1)
 	}
 
 	// If no endpoint is set then print the usage.
 	if os.Getenv(EnvVarEndpoint) == "" {
 		printUsage()
-		os.Exit(1)
+		osExit(1)
 	}
 
 	l, err := utils.GetCSIEndpointListener()
 	if err != nil {
-		log.WithError(err).Fatalln("failed to listen")
+		log.WithError(err).Info("failed to listen")
+		osExit(1)
 	}
 
 	// Define a lambda that can be used in the exit handler
@@ -131,7 +136,8 @@ func Run(
 
 	if err := sp.Serve(ctx, l); err != nil {
 		rmSockFile()
-		log.WithError(err).Fatal("grpc failed")
+		log.WithError(err).Info("grpc failed")
+		osExit(1)
 	}
 }
 
@@ -510,13 +516,13 @@ func trapSignals(onExit, onAbort func()) {
 				if onAbort != nil {
 					onAbort()
 				}
-				os.Exit(1)
+				osExit(1)
 			}
 			log.WithField("signal", s).Info("received signal; shutting down")
 			if onExit != nil {
 				onExit()
 			}
-			os.Exit(0)
+			osExit(0)
 		}
 	}()
 }
