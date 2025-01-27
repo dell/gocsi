@@ -13,9 +13,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupRoot(t *testing.T) {
+func setupRoot(t *testing.T, format string) {
 	root.ctx = context.Background()
-	root.format = pluginCapsFormat
+	root.format = format
 	tpl, err := template.New("t").Funcs(template.FuncMap{
 		"isa": func(o interface{}, t string) bool {
 			return fmt.Sprintf("%T", o) == t
@@ -50,7 +50,7 @@ func TestControllerCmd(t *testing.T) {
 func TestCreateSnapshotCmd(t *testing.T) {
 	child := createSnapshotCmd
 	// set up root as required
-	setupRoot(t)
+	setupRoot(t, snapshotInfoFormat)
 
 	// set up the CSI client with a mock
 	controller.client = service.NewClient()
@@ -71,7 +71,7 @@ func TestCreateSnapshotCmd(t *testing.T) {
 func TestCreateVolumeCmd(t *testing.T) {
 	child := createVolumeCmd
 	// set up root as required
-	setupRoot(t)
+	setupRoot(t, volumeInfoFormat)
 
 	// set up the CSI client with a mock
 	controller.client = service.NewClient()
@@ -103,7 +103,7 @@ func TestCreateVolumeCmd(t *testing.T) {
 func TestDeleteSnapshotCmd(t *testing.T) {
 	child := deleteSnapshotCmd
 	// set up root as required
-	setupRoot(t)
+	setupRoot(t, pluginCapsFormat)
 
 	// set up the CSI client with a mock
 	controller.client = service.NewClient()
@@ -118,7 +118,7 @@ func TestDeleteSnapshotCmd(t *testing.T) {
 func TestDeleteVolumeCmd(t *testing.T) {
 	child := deleteVolumeCmd
 	// set up root as required
-	setupRoot(t)
+	setupRoot(t, pluginCapsFormat)
 
 	// set up the CSI client with a mock
 	controller.client = service.NewClient()
@@ -133,7 +133,7 @@ func TestDeleteVolumeCmd(t *testing.T) {
 func TestExpandVolumeCmd(t *testing.T) {
 	child := expandVolumeCmd
 	// set up root as required
-	setupRoot(t)
+	setupRoot(t, pluginCapsFormat)
 
 	// set up the CSI client with a mock
 	controller.client = service.NewClient()
@@ -151,7 +151,7 @@ func TestExpandVolumeCmd(t *testing.T) {
 func TestGetCapabilitiesCmd(t *testing.T) {
 	child := controllerGetCapabilitiesCmd
 	// set up root as required
-	setupRoot(t)
+	setupRoot(t, pluginCapsFormat)
 
 	// set up the CSI client with a mock
 	controller.client = service.NewClient()
@@ -166,7 +166,7 @@ func TestGetCapabilitiesCmd(t *testing.T) {
 func TestGetCapacityCmd(t *testing.T) {
 	child := getCapacityCmd
 	// set up root as required
-	setupRoot(t)
+	setupRoot(t, pluginCapsFormat)
 
 	// set up the CSI client with a mock
 	controller.client = service.NewClient()
@@ -192,7 +192,7 @@ func TestGetCapacityCmd(t *testing.T) {
 func TestListSnapshotsCmd(t *testing.T) {
 	child := listSnapshotsCmd
 	// set up root as required
-	setupRoot(t)
+	setupRoot(t, snapshotInfoFormat)
 
 	// set up the CSI client with a mock
 	controller.client = service.NewClient()
@@ -208,6 +208,7 @@ func TestListSnapshotsCmd(t *testing.T) {
 
 	// do it again, but with paging disabled
 	listSnapshots.paging = false
+	setupRoot(t, listSnapshotsFormat)
 	err = child.RunE(RootCmd, []string{})
 	assert.NoError(t, err)
 
@@ -217,7 +218,7 @@ func TestListSnapshotsCmd(t *testing.T) {
 func TestListVolumesCmd(t *testing.T) {
 	child := listVolumesCmd
 	// set up root as required
-	setupRoot(t)
+	setupRoot(t, volumeInfoFormat)
 
 	// set up the CSI client with a mock
 	controller.client = service.NewClient()
@@ -231,6 +232,7 @@ func TestListVolumesCmd(t *testing.T) {
 
 	// do it again, but with paging disabled
 	listVolumes.paging = false
+	setupRoot(t, listVolumesFormat)
 	err = child.RunE(RootCmd, []string{})
 	assert.NoError(t, err)
 
@@ -240,7 +242,7 @@ func TestListVolumesCmd(t *testing.T) {
 func TestPublishVolumeCmd(t *testing.T) {
 	child := controllerPublishVolumeCmd
 	// set up root as required
-	setupRoot(t)
+	setupRoot(t, pluginCapsFormat)
 
 	// set up the CSI client with a mock
 	controller.client = service.NewClient()
@@ -268,7 +270,7 @@ func TestPublishVolumeCmd(t *testing.T) {
 func TestUnpublishVolumeCmd(t *testing.T) {
 	child := controllerUnpublishVolumeCmd
 	// set up root as required
-	setupRoot(t)
+	setupRoot(t, pluginCapsFormat)
 
 	// set up the CSI client with a mock
 	controller.client = service.NewClient()
@@ -284,7 +286,7 @@ func TestUnpublishVolumeCmd(t *testing.T) {
 func TestValidateVolumeCapabilitiesCmd(t *testing.T) {
 	child := valVolCapsCmd
 	// set up root as required
-	setupRoot(t)
+	setupRoot(t, pluginCapsFormat)
 
 	// set up the CSI client with a mock
 	controller.client = service.NewClient()

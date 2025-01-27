@@ -45,8 +45,7 @@ func TestGetPluginCapabilitiesCmd(t *testing.T) {
 
 	child := pluginCapsCmd
 	// set up root as required
-	setupRoot(t)
-	root.format = probeFormat
+	setupRoot(t, pluginCapsFormat)
 
 	// set up the CSI client with a mock
 	identity.client = service.NewClient()
@@ -72,8 +71,7 @@ func TestGetPluginInfoCmd(t *testing.T) {
 
 	child := pluginInfoCmd
 	// set up root as required
-	setupRoot(t)
-	root.format = probeFormat
+	setupRoot(t, pluginInfoFormat)
 
 	// set up the CSI client with a mock
 	identity.client = service.NewClient()
@@ -100,8 +98,7 @@ func TestProbeCmd(t *testing.T) {
 
 	child := probeCmd
 	// set up root as required
-	setupRoot(t)
-	root.format = probeFormat
+	setupRoot(t, probeFormat)
 
 	// set up the CSI client with a mock
 	identity.client = service.NewClient()

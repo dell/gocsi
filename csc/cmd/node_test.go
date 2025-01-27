@@ -18,14 +18,14 @@ var vcs volumeCapabilitySliceArg = volumeCapabilitySliceArg{data: []*csi.VolumeC
 }}
 
 func TestNodeCmd(t *testing.T) {
-	setupRoot(t)
+	setupRoot(t, pluginCapsFormat)
 	err := nodeCmd.PersistentPreRunE(nodeCmd, []string{})
 	assert.NoError(t, err)
 }
 
 func TestNodeExpandVolumeCmd(t *testing.T) {
 	node.client = service.NewClient()
-	setupRoot(t)
+	setupRoot(t, pluginCapsFormat)
 	child := nodeExpandVolumeCmd
 	err := child.RunE(RootCmd, []string{"volID", "/test/volume"})
 	assert.NoError(t, err)
@@ -46,7 +46,7 @@ func TestNodeExpandVolumeCmd(t *testing.T) {
 
 func TestNodeGetCapabilitiesCmd(t *testing.T) {
 	node.client = service.NewClient()
-	setupRoot(t)
+	setupRoot(t, pluginCapsFormat)
 	child := nodeGetCapabilitiesCmd
 	err := child.RunE(RootCmd, []string{})
 	assert.NoError(t, err)
@@ -54,8 +54,8 @@ func TestNodeGetCapabilitiesCmd(t *testing.T) {
 
 func TestNodeGetVolumeStatsCmd(t *testing.T) {
 	// Set format for NodeGetVolumeStats cmd
-	setupRoot(t)
-	root.format = statsFormat
+	setupRoot(t, statsFormat)
+	// root.format = statsFormat
 
 	node.client = service.NewClient()
 	child := nodeGetVolumeStatsCmd
@@ -65,8 +65,8 @@ func TestNodeGetVolumeStatsCmd(t *testing.T) {
 
 func TestNodeGetInfo(t *testing.T) {
 	// Set format for NodeGetInfo cmd
-	setupRoot(t)
-	root.format = nodeInfoFormat
+	setupRoot(t, nodeInfoFormat)
+	// root.format = nodeInfoFormat
 
 	node.client = service.NewClient()
 	child := nodeGetInfoCmd
@@ -75,7 +75,7 @@ func TestNodeGetInfo(t *testing.T) {
 }
 
 func TestNodePublishVolume(t *testing.T) {
-	setupRoot(t)
+	setupRoot(t, pluginCapsFormat)
 	node.client = service.NewClient()
 	child := nodePublishVolumeCmd
 	err := child.RunE(RootCmd, []string{"mock-vol-id"})
@@ -88,7 +88,7 @@ func TestNodePublishVolume(t *testing.T) {
 }
 
 func TestNodeStageVolume(t *testing.T) {
-	setupRoot(t)
+	setupRoot(t, pluginCapsFormat)
 	node.client = service.NewClient()
 	child := nodeStageVolumeCmd
 	err := child.RunE(RootCmd, []string{"mock-vol-id"})
@@ -101,7 +101,7 @@ func TestNodeStageVolume(t *testing.T) {
 }
 
 func TestNodeUnpublishVolume(t *testing.T) {
-	setupRoot(t)
+	setupRoot(t, pluginCapsFormat)
 	node.client = service.NewClient()
 	child := nodeUnpublishVolumeCmd
 	err := child.RunE(RootCmd, []string{"mock-vol-id", "mock/target/path"})
@@ -109,7 +109,7 @@ func TestNodeUnpublishVolume(t *testing.T) {
 }
 
 func TestNodeUnstageVolume(t *testing.T) {
-	setupRoot(t)
+	setupRoot(t, pluginCapsFormat)
 	node.client = service.NewClient()
 	child := nodeUnstageVolumeCmd
 	err := child.RunE(RootCmd, []string{"mock-vol-id", "mock/target/path"})

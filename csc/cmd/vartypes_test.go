@@ -93,7 +93,7 @@ func TestVolumeCapabilitySliceArg_Set(t *testing.T) {
 	s := &volumeCapabilitySliceArg{}
 
 	// Test case: Valid input
-	//err := s.Set("mode,type,fstype,mntflags")
+	// err := s.Set("mode,type,fstype,mntflags")
 	err := s.Set("1,1,1,1")
 	if err != nil {
 		t.Errorf("Set() returned an error: %v", err)
