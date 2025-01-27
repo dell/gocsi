@@ -54,8 +54,8 @@ func TestNodeGetCapabilitiesCmd(t *testing.T) {
 
 func TestNodeGetVolumeStatsCmd(t *testing.T) {
 	// Set format for NodeGetVolumeStats cmd
-	root.format = statsFormat
 	setupRoot(t)
+	root.format = statsFormat
 
 	node.client = service.NewClient()
 	child := nodeGetVolumeStatsCmd
@@ -65,8 +65,9 @@ func TestNodeGetVolumeStatsCmd(t *testing.T) {
 
 func TestNodeGetInfo(t *testing.T) {
 	// Set format for NodeGetInfo cmd
-	root.format = nodeInfoFormat
 	setupRoot(t)
+	root.format = nodeInfoFormat
+
 	node.client = service.NewClient()
 	child := nodeGetInfoCmd
 	err := child.RunE(RootCmd, []string{"mock-node-id"})
