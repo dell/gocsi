@@ -2,12 +2,9 @@ package cmd
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"testing"
-	"text/template"
-	"time"
 
 	"github.com/dell/gocsi/mock/service"
 	"github.com/spf13/cobra"
@@ -48,22 +45,13 @@ func TestGetPluginCapabilitiesCmd(t *testing.T) {
 
 	child := pluginCapsCmd
 	// set up root as required
-	root.ctx = context.Background()
-	root.timeout = 10 * time.Second
-	root.format = pluginCapsFormat
-	tpl, err := template.New("t").Funcs(template.FuncMap{
-		"isa": func(o interface{}, t string) bool {
-			return fmt.Sprintf("%T", o) == t
-		},
-	}).Parse(root.format)
-	assert.NoError(t, err)
-	root.tpl = tpl
+	setupRoot(t)
 
 	// set up the CSI client with a mock
 	identity.client = service.NewClient()
 
 	// Valid test case
-	err = child.RunE(RootCmd, []string{""})
+	err := child.RunE(RootCmd, []string{""})
 	assert.NoError(t, err)
 
 	out := b.String()
@@ -83,22 +71,13 @@ func TestGetPluginInfoCmd(t *testing.T) {
 
 	child := pluginInfoCmd
 	// set up root as required
-	root.ctx = context.Background()
-	root.timeout = 10 * time.Second
-	root.format = pluginInfoFormat
-	tpl, err := template.New("t").Funcs(template.FuncMap{
-		"isa": func(o interface{}, t string) bool {
-			return fmt.Sprintf("%T", o) == t
-		},
-	}).Parse(root.format)
-	assert.NoError(t, err)
-	root.tpl = tpl
+	setupRoot(t)
 
 	// set up the CSI client with a mock
 	identity.client = service.NewClient()
 
 	// Valid test case
-	err = child.RunE(RootCmd, []string{""})
+	err := child.RunE(RootCmd, []string{""})
 	assert.NoError(t, err)
 
 	out := b.String()
@@ -119,22 +98,13 @@ func TestProbeCmd(t *testing.T) {
 
 	child := probeCmd
 	// set up root as required
-	root.ctx = context.Background()
-	root.timeout = 10 * time.Second
-	root.format = probeFormat
-	tpl, err := template.New("t").Funcs(template.FuncMap{
-		"isa": func(o interface{}, t string) bool {
-			return fmt.Sprintf("%T", o) == t
-		},
-	}).Parse(root.format)
-	assert.NoError(t, err)
-	root.tpl = tpl
+	setupRoot(t)
 
 	// set up the CSI client with a mock
 	identity.client = service.NewClient()
 
 	// Valid test case
-	err = child.RunE(RootCmd, []string{""})
+	err := child.RunE(RootCmd, []string{""})
 	assert.NoError(t, err)
 
 	out := b.String()

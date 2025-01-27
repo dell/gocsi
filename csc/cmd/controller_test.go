@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 	"text/template"
-	"time"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/dell/gocsi/mock/service"
@@ -16,7 +15,7 @@ import (
 
 func setupRoot(t *testing.T) {
 	root.ctx = context.Background()
-	root.timeout = 10 * time.Second
+	root.format = pluginCapsFormat
 	tpl, err := template.New("t").Funcs(template.FuncMap{
 		"isa": func(o interface{}, t string) bool {
 			return fmt.Sprintf("%T", o) == t
