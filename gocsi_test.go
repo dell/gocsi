@@ -20,7 +20,7 @@ func TestRun(t *testing.T) {
 	originalOsExit := osExit
 
 	calledOsExit := make(chan struct{})
-	osExit = func(code int) {
+	osExit = func(_ int) {
 		calledOsExit <- struct{}{}
 	}
 
