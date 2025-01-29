@@ -53,7 +53,7 @@ func Test_interceptor_handleServer(t *testing.T) {
 				ctx: context.Background(),
 				req: "test request",
 				in2: &grpc.UnaryServerInfo{},
-				handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+				handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 					return "test response", nil
 				},
 			},
@@ -108,7 +108,7 @@ func Test_interceptor_handleClient(t *testing.T) {
 				req:    "exampleRequest",
 				rep:    "exampleResponse",
 				cc:     &grpc.ClientConn{},
-				invoker: func(ctx context.Context, method string, req, rep interface{}, cc *grpc.ClientConn, opts ...grpc.CallOption) error {
+				invoker: func(_ context.Context, _ string, _, _ interface{}, _ *grpc.ClientConn, _ ...grpc.CallOption) error {
 					return nil
 				},
 				opts: []grpc.CallOption{},

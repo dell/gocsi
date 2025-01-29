@@ -173,7 +173,7 @@ func (s *serviceClient) NodeUnstageVolume(
 
 func (s *serviceClient) NodePublishVolume(
 	_ context.Context,
-	req *csi.NodePublishVolumeRequest, _ ...grpc.CallOption) (
+	_ *csi.NodePublishVolumeRequest, _ ...grpc.CallOption) (
 	*csi.NodePublishVolumeResponse, error,
 ) {
 	return &csi.NodePublishVolumeResponse{}, nil
@@ -181,7 +181,7 @@ func (s *serviceClient) NodePublishVolume(
 
 func (s *serviceClient) NodeUnpublishVolume(
 	_ context.Context,
-	req *csi.NodeUnpublishVolumeRequest, _ ...grpc.CallOption) (
+	_ *csi.NodeUnpublishVolumeRequest, _ ...grpc.CallOption) (
 	*csi.NodeUnpublishVolumeResponse, error,
 ) {
 	return &csi.NodeUnpublishVolumeResponse{}, nil
@@ -217,7 +217,7 @@ func (s *serviceClient) NodeGetCapabilities(
 
 func (s *serviceClient) NodeGetVolumeStats(
 	_ context.Context,
-	req *csi.NodeGetVolumeStatsRequest, _ ...grpc.CallOption) (
+	_ *csi.NodeGetVolumeStatsRequest, _ ...grpc.CallOption) (
 	*csi.NodeGetVolumeStatsResponse, error,
 ) {
 	return &csi.NodeGetVolumeStatsResponse{}, nil

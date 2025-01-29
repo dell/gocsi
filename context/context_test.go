@@ -48,7 +48,7 @@ func TestWithEnviron(t *testing.T) {
 }
 
 func TestWithLookupEnv(t *testing.T) {
-	f := lookupEnvFunc(func(key string) (string, bool) {
+	f := lookupEnvFunc(func(_ string) (string, bool) {
 		return "test", true
 	})
 
@@ -83,7 +83,7 @@ func TestGetenv(t *testing.T) {
 	assert.Equal(t, "value", v)
 
 	ctx = context.Background()
-	ctx = WithLookupEnv(ctx, func(s string) (string, bool) {
+	ctx = WithLookupEnv(ctx, func(_ string) (string, bool) {
 		return "value", true
 	})
 

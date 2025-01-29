@@ -9,7 +9,7 @@ import (
 )
 
 // vcs is used to simulate a slice of volume capabilities to test behavior of node commands
-var vcs volumeCapabilitySliceArg = volumeCapabilitySliceArg{data: []*csi.VolumeCapability{
+var vcs = volumeCapabilitySliceArg{data: []*csi.VolumeCapability{
 	{
 		AccessType: &csi.VolumeCapability_Mount{
 			Mount: &csi.VolumeCapability_MountVolume{},

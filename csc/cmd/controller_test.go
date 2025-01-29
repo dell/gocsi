@@ -37,7 +37,7 @@ func TestControllerCmd(t *testing.T) {
 
 	// test case: error
 	// force RootCmd to return error
-	RootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+	RootCmd.PersistentPreRunE = func(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("test error")
 	}
 	err = child.PersistentPreRunE(child, []string{})

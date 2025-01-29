@@ -529,7 +529,6 @@ func TestParseSlice(t *testing.T) {
 
 	// Test case: Empty string
 	input = ""
-	expected = []string{}
 	result = utils.ParseSlice(input)
 	Expect(len(result)).To(Equal(0))
 
@@ -592,7 +591,8 @@ func TestPageSnapshots(t *testing.T) {
 	ctx := context.Background()
 
 	// The mock service is initialized to have zero snapshots, so, create one
-	svc.CreateSnapshot(ctx, &csi.CreateSnapshotRequest{SourceVolumeId: "1", Name: "snapshot0"})
+	_, err := svc.CreateSnapshot(ctx, &csi.CreateSnapshotRequest{SourceVolumeId: "1", Name: "snapshot0"})
+	Expect(err).To(BeNil())
 
 	// Create a list volumes request
 	req := csi.ListSnapshotsRequest{}
@@ -600,7 +600,6 @@ func TestPageSnapshots(t *testing.T) {
 	// Call the PageSnapshots function
 	csnap, cerr := utils.PageSnapshots(ctx, svc, req)
 	snaps := []csi.Snapshot{}
-	var err error
 	for {
 		select {
 		case v, ok := <-csnap:

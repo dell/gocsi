@@ -39,7 +39,7 @@ func TestControllerCreateVolume(t *testing.T) {
 					},
 				},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.CreateVolumeResponse{
 					Volume: &csi.Volume{
 						VolumeId: "test-volume",
@@ -77,7 +77,7 @@ func TestControllerCreateVolume(t *testing.T) {
 					},
 				},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.CreateVolumeResponse{
 					Volume: nil,
 				}, nil
@@ -99,7 +99,7 @@ func TestControllerCreateVolume(t *testing.T) {
 					},
 				},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.CreateVolumeResponse{
 					Volume: &csi.Volume{},
 				}, nil
@@ -139,7 +139,7 @@ func TestControllerDeleteVolume(t *testing.T) {
 				VolumeId: "test-volume",
 				Secrets:  map[string]string{"key": "value"},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.DeleteVolumeResponse{}, nil
 			},
 			wantErr: false,
@@ -155,7 +155,7 @@ func TestControllerDeleteVolume(t *testing.T) {
 				VolumeId: "test-volume",
 				Secrets:  map[string]string{},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.DeleteVolumeResponse{}, nil
 			},
 			wantErr: true,
@@ -204,7 +204,7 @@ func TestControllerPublishVolume(t *testing.T) {
 				},
 				VolumeContext: map[string]string{"key": "value"},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.ControllerPublishVolumeResponse{}, nil
 			},
 			wantErr: false,
@@ -225,7 +225,7 @@ func TestControllerPublishVolume(t *testing.T) {
 				},
 				VolumeContext: map[string]string{},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.ControllerPublishVolumeResponse{}, nil
 			},
 			wantErr: true,
@@ -260,7 +260,7 @@ func TestControllerPublishVolume(t *testing.T) {
 				},
 				VolumeContext: map[string]string{"key": "value"},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.ControllerPublishVolumeResponse{}, nil
 			},
 			wantErr: true,
@@ -274,7 +274,7 @@ func TestControllerPublishVolume(t *testing.T) {
 				VolumeCapability: nil,
 				VolumeContext:    map[string]string{"key": "value"},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.ControllerPublishVolumeResponse{}, nil
 			},
 			wantErr: true,
@@ -290,7 +290,7 @@ func TestControllerPublishVolume(t *testing.T) {
 				},
 				VolumeContext: map[string]string{"key": "value"},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.ControllerPublishVolumeResponse{}, nil
 			},
 			wantErr: true,
@@ -309,7 +309,7 @@ func TestControllerPublishVolume(t *testing.T) {
 				},
 				VolumeContext: map[string]string{"key": "value"},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.ControllerPublishVolumeResponse{}, nil
 			},
 			wantErr: true,
@@ -330,7 +330,7 @@ func TestControllerPublishVolume(t *testing.T) {
 				},
 				VolumeContext: map[string]string{"key": "value"},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.ControllerPublishVolumeResponse{}, nil
 			},
 			wantErr: true,
@@ -351,7 +351,7 @@ func TestControllerPublishVolume(t *testing.T) {
 				},
 				VolumeContext: map[string]string{"key": "value"},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.ControllerPublishVolumeResponse{}, nil
 			},
 			wantErr: true,
@@ -390,7 +390,7 @@ func TestControllerUnpublishVolume(t *testing.T) {
 				NodeId:   "test-node",
 				Secrets:  map[string]string{"key": "value"},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.ControllerPublishVolumeResponse{}, nil
 			},
 			wantErr: false,
@@ -401,7 +401,7 @@ func TestControllerUnpublishVolume(t *testing.T) {
 				VolumeId: "test-volume",
 				NodeId:   "test-node",
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.ControllerUnpublishVolumeResponse{}, nil
 			},
 			wantErr: true,
@@ -447,7 +447,7 @@ func TestControllerValidateVolumeCapabilities(t *testing.T) {
 					},
 				},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.ControllerPublishVolumeResponse{}, nil
 			},
 			wantErr: false,
@@ -546,7 +546,7 @@ func TestControllerGetCapacity(t *testing.T) {
 					},
 				},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.GetCapacityResponse{}, nil
 			},
 			wantErr: false,
@@ -560,7 +560,7 @@ func TestControllerGetCapacity(t *testing.T) {
 					},
 				},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.GetCapacityResponse{}, nil
 			},
 			wantErr: true,
@@ -579,7 +579,7 @@ func TestControllerGetCapacity(t *testing.T) {
 					},
 				},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.GetCapacityResponse{}, nil
 			},
 			wantErr: true,
@@ -598,7 +598,7 @@ func TestControllerGetCapacity(t *testing.T) {
 					},
 				},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.GetCapacityResponse{}, nil
 			},
 			wantErr: true,
@@ -758,7 +758,7 @@ func TestNodeStageVolume(t *testing.T) {
 				},
 				PublishContext: map[string]string{"key": "value"},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.NodeStageVolumeResponse{}, nil
 			},
 			wantErr: false,
@@ -779,7 +779,7 @@ func TestNodeStageVolume(t *testing.T) {
 				},
 				PublishContext: map[string]string{},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.NodeStageVolumeResponse{}, nil
 			},
 			wantErr: true,
@@ -799,7 +799,7 @@ func TestNodeStageVolume(t *testing.T) {
 				},
 				PublishContext: map[string]string{"key": "value"},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.NodeStageVolumeResponse{}, nil
 			},
 			wantErr: true,
@@ -819,7 +819,7 @@ func TestNodeStageVolume(t *testing.T) {
 				},
 				PublishContext: map[string]string{"key": "value"},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.NodeStageVolumeResponse{}, nil
 			},
 			wantErr: true,
@@ -857,7 +857,7 @@ func TestNodeUnstageVolume(t *testing.T) {
 				VolumeId:          "test-volume",
 				StagingTargetPath: "/tmp",
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.NodeUnstageVolumeResponse{}, nil
 			},
 			wantErr: false,
@@ -867,7 +867,7 @@ func TestNodeUnstageVolume(t *testing.T) {
 			req: &csi.NodeUnstageVolumeRequest{
 				VolumeId: "test-volume",
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.NodeUnstageVolumeResponse{}, nil
 			},
 			wantErr: true,
@@ -916,7 +916,7 @@ func TestNodePublishVolume(t *testing.T) {
 					},
 				},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.NodePublishVolumeResponse{}, nil
 			},
 			wantErr: false,
@@ -936,7 +936,7 @@ func TestNodePublishVolume(t *testing.T) {
 					},
 				},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.NodePublishVolumeResponse{}, nil
 			},
 			wantErr: true,
@@ -956,7 +956,7 @@ func TestNodePublishVolume(t *testing.T) {
 					},
 				},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.NodePublishVolumeResponse{}, nil
 			},
 			wantErr: true,
@@ -977,7 +977,7 @@ func TestNodePublishVolume(t *testing.T) {
 					},
 				},
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.NodePublishVolumeResponse{}, nil
 			},
 			wantErr: true,
@@ -1014,7 +1014,7 @@ func TestNodeUnpublishVolume(t *testing.T) {
 				VolumeId:   "test-volume",
 				TargetPath: "/tmp",
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.NodeUnpublishVolumeResponse{}, nil
 			},
 			wantErr: false,
@@ -1024,7 +1024,7 @@ func TestNodeUnpublishVolume(t *testing.T) {
 			req: &csi.NodeUnpublishVolumeRequest{
 				VolumeId: "test-volume",
 			},
-			handler: func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler: func(_ context.Context, _ interface{}) (interface{}, error) {
 				return &csi.NodeUnpublishVolumeResponse{}, nil
 			},
 			wantErr: true,

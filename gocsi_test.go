@@ -97,7 +97,7 @@ func TestRun(t *testing.T) {
 	<-calledOsExit
 }
 
-func TestRunHelp(t *testing.T) {
+func TestRunHelp(_ *testing.T) {
 	originalOsExit := osExit
 	originalOsArgs := os.Args
 	defer func() {
@@ -119,7 +119,7 @@ func TestRunHelp(t *testing.T) {
 	<-calledOsExit
 }
 
-func TestRunNoEndpoint(t *testing.T) {
+func TestRunNoEndpoint(_ *testing.T) {
 	originalOsExit := osExit
 
 	calledOsExit := make(chan struct{})
@@ -140,7 +140,7 @@ func TestRunNoEndpoint(t *testing.T) {
 	<-calledOsExit
 }
 
-func TestRunFailListener(t *testing.T) {
+func TestRunFailListener(_ *testing.T) {
 	originalOsExit := osExit
 
 	calledOsExit := make(chan struct{})

@@ -101,9 +101,9 @@ func TestVolumeCapabilitySliceArg_Set(t *testing.T) {
 	if len(s.data) != 1 {
 		t.Errorf("Set() did not set the correct number of volume capabilities: got %d, want %d", len(s.data), 1)
 	}
-	cap := s.data[0]
-	if cap.AccessMode.Mode != csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER {
-		t.Errorf("Set() did not set the correct access mode: got %v, want %v", cap.AccessMode.Mode, csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER)
+	capacity := s.data[0]
+	if capacity.AccessMode.Mode != csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER {
+		t.Errorf("Set() did not set the correct access mode: got %v, want %v", capacity.AccessMode.Mode, csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER)
 	}
 
 	// test case: mount type capability
@@ -114,9 +114,9 @@ func TestVolumeCapabilitySliceArg_Set(t *testing.T) {
 	if len(s.data) != 2 {
 		t.Errorf("Set() did not set the correct number of volume capabilities: got %d, want %d", len(s.data), 1)
 	}
-	cap = s.data[1]
-	if cap.AccessMode.Mode != csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER {
-		t.Errorf("Set() did not set the correct access mode: got %v, want %v", cap.AccessMode.Mode, csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER)
+	capacity = s.data[1]
+	if capacity.AccessMode.Mode != csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER {
+		t.Errorf("Set() did not set the correct access mode: got %v, want %v", capacity.AccessMode.Mode, csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER)
 	}
 
 	// Test case: Invalid input

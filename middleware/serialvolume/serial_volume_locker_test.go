@@ -19,7 +19,7 @@ func TestCreateVolume(t *testing.T) {
 	}
 	interceptor := New(WithTimeout(1*time.Second), WithLockProvider(locker))
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(_ context.Context, _ interface{}) (interface{}, error) {
 		return &csi.CreateVolumeResponse{}, nil
 	}
 
@@ -36,7 +36,7 @@ func TestCreateVolumeTimeout(t *testing.T) {
 	locker := &MockVolumeLockerProvider{locks: make(map[string]bool)}
 	interceptor := New(WithLockProvider(locker), WithTimeout(1*time.Millisecond))
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(_ context.Context, _ interface{}) (interface{}, error) {
 		return &csi.CreateVolumeResponse{}, nil
 	}
 
@@ -59,7 +59,7 @@ func TestCreateVolumeTimeout(t *testing.T) {
 func TestControllerPublishVolume(t *testing.T) {
 	interceptor := New(WithTimeout(1 * time.Second))
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(_ context.Context, _ interface{}) (interface{}, error) {
 		return &csi.ControllerPublishVolumeResponse{}, nil
 	}
 
@@ -76,7 +76,7 @@ func TestControllerPublishVolumeTimeout(t *testing.T) {
 	locker := &MockVolumeLockerProvider{locks: make(map[string]bool)}
 	interceptor := New(WithLockProvider(locker), WithTimeout(1*time.Millisecond))
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(_ context.Context, _ interface{}) (interface{}, error) {
 		return &csi.ControllerPublishVolumeResponse{}, nil
 	}
 
@@ -99,7 +99,7 @@ func TestControllerPublishVolumeTimeout(t *testing.T) {
 func TestControllerUnpublishVolume(t *testing.T) {
 	interceptor := New(WithTimeout(1 * time.Second))
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(_ context.Context, _ interface{}) (interface{}, error) {
 		return &csi.ControllerUnpublishVolumeResponse{}, nil
 	}
 
@@ -116,7 +116,7 @@ func TestControllerUnpublishVolumeTimeout(t *testing.T) {
 	locker := &MockVolumeLockerProvider{locks: make(map[string]bool)}
 	interceptor := New(WithLockProvider(locker), WithTimeout(1*time.Millisecond))
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(_ context.Context, _ interface{}) (interface{}, error) {
 		return &csi.ControllerUnpublishVolumeResponse{}, nil
 	}
 
@@ -139,7 +139,7 @@ func TestControllerUnpublishVolumeTimeout(t *testing.T) {
 func TestDeleteVolume(t *testing.T) {
 	interceptor := New(WithTimeout(1 * time.Second))
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(_ context.Context, _ interface{}) (interface{}, error) {
 		return &csi.DeleteVolumeResponse{}, nil
 	}
 
@@ -156,7 +156,7 @@ func TestDeleteVolumeTimeout(t *testing.T) {
 	locker := &MockVolumeLockerProvider{locks: make(map[string]bool)}
 	interceptor := New(WithLockProvider(locker), WithTimeout(1*time.Millisecond))
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(_ context.Context, _ interface{}) (interface{}, error) {
 		return &csi.DeleteVolumeResponse{}, nil
 	}
 
@@ -179,7 +179,7 @@ func TestDeleteVolumeTimeout(t *testing.T) {
 func TestNodePublishVolume(t *testing.T) {
 	interceptor := New(WithTimeout(1 * time.Second))
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(_ context.Context, _ interface{}) (interface{}, error) {
 		return &csi.NodePublishVolumeResponse{}, nil
 	}
 
@@ -196,7 +196,7 @@ func TestNodePublishVolumeTimeout(t *testing.T) {
 	locker := &MockVolumeLockerProvider{locks: make(map[string]bool)}
 	interceptor := New(WithLockProvider(locker), WithTimeout(1*time.Millisecond))
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(_ context.Context, _ interface{}) (interface{}, error) {
 		return &csi.NodePublishVolumeResponse{}, nil
 	}
 
@@ -219,7 +219,7 @@ func TestNodePublishVolumeTimeout(t *testing.T) {
 func TestNodeUnpublishVolume(t *testing.T) {
 	interceptor := New(WithTimeout(1 * time.Second))
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(_ context.Context, _ interface{}) (interface{}, error) {
 		return &csi.NodeUnpublishVolumeResponse{}, nil
 	}
 
@@ -236,7 +236,7 @@ func TestNodeUnpublishVolumeTimeout(t *testing.T) {
 	locker := &MockVolumeLockerProvider{locks: make(map[string]bool)}
 	interceptor := New(WithLockProvider(locker), WithTimeout(1*time.Millisecond))
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(_ context.Context, _ interface{}) (interface{}, error) {
 		return &csi.NodeUnpublishVolumeResponse{}, nil
 	}
 
@@ -261,14 +261,14 @@ type MockVolumeLockerProvider struct {
 	locks map[string]bool
 }
 
-func (m *MockVolumeLockerProvider) GetLockWithID(ctx context.Context, id string) (gosync.TryLocker, error) {
+func (m *MockVolumeLockerProvider) GetLockWithID(_ context.Context, id string) (gosync.TryLocker, error) {
 	if _, exists := m.locks[id]; !exists {
 		m.locks[id] = false
 	}
 	return &MockLock{id: id, locks: m.locks}, nil
 }
 
-func (m *MockVolumeLockerProvider) GetLockWithName(ctx context.Context, name string) (gosync.TryLocker, error) {
+func (m *MockVolumeLockerProvider) GetLockWithName(_ context.Context, name string) (gosync.TryLocker, error) {
 	if _, exists := m.locks[name]; !exists {
 		m.locks[name] = false
 	}
@@ -282,7 +282,7 @@ type MockLock struct {
 	locks map[string]bool
 }
 
-func (m *MockLock) TryLock(timeout time.Duration) bool {
+func (m *MockLock) TryLock(_ time.Duration) bool {
 	if m.locks[m.id] {
 		return false
 	}

@@ -276,7 +276,10 @@ func generateCertificate() (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: certDER})
+	err = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: certDER})
+	if err != nil {
+		return "", "", err
+	}
 	certOut.Close()
 
 	// Save the private key to a file
