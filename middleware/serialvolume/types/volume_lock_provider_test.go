@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/akutz/gosync"
@@ -13,11 +14,15 @@ type MyType struct{}
 
 // Methods for MyType to implement the VolumeLockerProvider interface
 func (ml *MyType) GetLockWithID(ctx context.Context, id string) (gosync.TryLocker, error) {
+	fmt.Println(ctx)
+	fmt.Println(id)
 	lock := &gosync.TryMutex{}
 	return lock, nil
 }
 
 func (ml *MyType) GetLockWithName(ctx context.Context, name string) (gosync.TryLocker, error) {
+	fmt.Println(ctx)
+	fmt.Println(name)
 	lock := &gosync.TryMutex{}
 	return lock, nil
 }
