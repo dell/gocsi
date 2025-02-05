@@ -42,6 +42,11 @@ func TestNodeExpandVolumeCmd(t *testing.T) {
 	nodeExpandVolume.limBytes = 1
 	err = child.RunE(RootCmd, []string{"volID", "/test/volume"})
 	assert.NoError(t, err)
+
+	// try an error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{"volID", "/test/volume"})
+	assert.ErrorContains(t, err, "error from mock NodeExpandVolume")
 }
 
 func TestNodeGetCapabilitiesCmd(t *testing.T) {
@@ -50,6 +55,11 @@ func TestNodeGetCapabilitiesCmd(t *testing.T) {
 	child := nodeGetCapabilitiesCmd
 	err := child.RunE(RootCmd, []string{})
 	assert.NoError(t, err)
+
+	// try an error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{})
+	assert.ErrorContains(t, err, "error from mock NodeGetCapabilities")
 }
 
 func TestNodeGetVolumeStatsCmd(t *testing.T) {
@@ -66,7 +76,6 @@ func TestNodeGetVolumeStatsCmd(t *testing.T) {
 func TestNodeGetInfo(t *testing.T) {
 	// Set format for NodeGetInfo cmd
 	setupRoot(t, nodeInfoFormat)
-	// root.format = nodeInfoFormat
 
 	node.client = service.NewClient()
 	child := nodeGetInfoCmd

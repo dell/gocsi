@@ -12,6 +12,8 @@ import (
 	"github.com/container-storage-interface/spec/lib/go/csi"
 )
 
+type ContextKey string
+
 func (s *service) NodeStageVolume(
 	_ context.Context,
 	_ *csi.NodeStageVolumeRequest) (
@@ -151,7 +153,6 @@ func (s *service) NodeExpandVolume(
 	_ *csi.NodeExpandVolumeRequest) (
 	*csi.NodeExpandVolumeResponse, error,
 ) {
-	// return nil, status.Error(codes.Unimplemented, "")
 	return &csi.NodeExpandVolumeResponse{}, nil
 }
 
@@ -196,10 +197,15 @@ func (s *serviceClient) NodeGetInfo(
 }
 
 func (s *serviceClient) NodeGetCapabilities(
-	_ context.Context,
+	ctx context.Context,
 	_ *csi.NodeGetCapabilitiesRequest, _ ...grpc.CallOption) (
 	*csi.NodeGetCapabilitiesResponse, error,
 ) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock NodeGetCapabilities")
+	}
+
 	// send back one capability
 	nodeCapabalities := []*csi.NodeServiceCapability{
 		{
@@ -224,9 +230,14 @@ func (s *serviceClient) NodeGetVolumeStats(
 }
 
 func (s *serviceClient) NodeExpandVolume(
-	_ context.Context,
+	ctx context.Context,
 	_ *csi.NodeExpandVolumeRequest, _ ...grpc.CallOption) (
 	*csi.NodeExpandVolumeResponse, error,
 ) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock NodeExpandVolume")
+	}
+
 	return &csi.NodeExpandVolumeResponse{}, nil
 }

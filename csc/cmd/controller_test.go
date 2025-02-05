@@ -25,6 +25,12 @@ func setupRoot(t *testing.T, format string) {
 	root.tpl = tpl
 }
 
+// By setting a key in the context, we can tell our mock service to return an error
+func setupRootCtxToFailCSICalls() {
+	returnError := service.ContextKey("returnError")
+	root.ctx = context.WithValue(root.ctx, returnError, "true")
+}
+
 func TestControllerCmd(t *testing.T) {
 	child := controllerCmd
 
