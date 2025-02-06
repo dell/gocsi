@@ -157,42 +157,62 @@ func (s *service) NodeExpandVolume(
 }
 
 func (s *serviceClient) NodeStageVolume(
-	_ context.Context,
+	ctx context.Context,
 	_ *csi.NodeStageVolumeRequest, _ ...grpc.CallOption) (
 	*csi.NodeStageVolumeResponse, error,
 ) {
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock NodeStageVolume")
+	}
+
 	return &csi.NodeStageVolumeResponse{}, nil
 }
 
 func (s *serviceClient) NodeUnstageVolume(
-	_ context.Context,
+	ctx context.Context,
 	_ *csi.NodeUnstageVolumeRequest, _ ...grpc.CallOption) (
 	*csi.NodeUnstageVolumeResponse, error,
 ) {
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock NodeUnstageVolume")
+	}
+
 	return &csi.NodeUnstageVolumeResponse{}, nil
 }
 
 func (s *serviceClient) NodePublishVolume(
-	_ context.Context,
+	ctx context.Context,
 	_ *csi.NodePublishVolumeRequest, _ ...grpc.CallOption) (
 	*csi.NodePublishVolumeResponse, error,
 ) {
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock NodePublishVolume")
+	}
+
 	return &csi.NodePublishVolumeResponse{}, nil
 }
 
 func (s *serviceClient) NodeUnpublishVolume(
-	_ context.Context,
+	ctx context.Context,
 	_ *csi.NodeUnpublishVolumeRequest, _ ...grpc.CallOption) (
 	*csi.NodeUnpublishVolumeResponse, error,
 ) {
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock NodeUnpublishVolume")
+	}
+
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 
 func (s *serviceClient) NodeGetInfo(
-	_ context.Context,
+	ctx context.Context,
 	_ *csi.NodeGetInfoRequest, _ ...grpc.CallOption) (
 	*csi.NodeGetInfoResponse, error,
 ) {
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock NodeGetInfo")
+	}
+
 	return &csi.NodeGetInfoResponse{}, nil
 }
 
@@ -222,10 +242,14 @@ func (s *serviceClient) NodeGetCapabilities(
 }
 
 func (s *serviceClient) NodeGetVolumeStats(
-	_ context.Context,
+	ctx context.Context,
 	_ *csi.NodeGetVolumeStatsRequest, _ ...grpc.CallOption) (
 	*csi.NodeGetVolumeStatsResponse, error,
 ) {
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock NodeGetVolumeStats")
+	}
+
 	return &csi.NodeGetVolumeStatsResponse{}, nil
 }
 

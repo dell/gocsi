@@ -43,7 +43,7 @@ func TestNodeExpandVolumeCmd(t *testing.T) {
 	err = child.RunE(RootCmd, []string{"volID", "/test/volume"})
 	assert.NoError(t, err)
 
-	// try an error
+	// force NodeExpandVolume to return error
 	setupRootCtxToFailCSICalls()
 	err = child.RunE(RootCmd, []string{"volID", "/test/volume"})
 	assert.ErrorContains(t, err, "error from mock NodeExpandVolume")
@@ -56,7 +56,7 @@ func TestNodeGetCapabilitiesCmd(t *testing.T) {
 	err := child.RunE(RootCmd, []string{})
 	assert.NoError(t, err)
 
-	// try an error
+	// force NodeGetCapabilities to return error
 	setupRootCtxToFailCSICalls()
 	err = child.RunE(RootCmd, []string{})
 	assert.ErrorContains(t, err, "error from mock NodeGetCapabilities")
@@ -71,6 +71,11 @@ func TestNodeGetVolumeStatsCmd(t *testing.T) {
 	child := nodeGetVolumeStatsCmd
 	err := child.RunE(RootCmd, []string{"Mock Volume 2:/root/mock-vol:/root/mock/patch"})
 	assert.NoError(t, err)
+
+	// force NodeGetVolumeStats to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{"Mock Volume 2:/root/mock-vol:/root/mock/patch"})
+	assert.ErrorContains(t, err, "error from mock NodeGetVolumeStats")
 }
 
 func TestNodeGetInfo(t *testing.T) {
@@ -81,6 +86,11 @@ func TestNodeGetInfo(t *testing.T) {
 	child := nodeGetInfoCmd
 	err := child.RunE(RootCmd, []string{"mock-node-id"})
 	assert.NoError(t, err)
+
+	// force NodeGetInfo to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{"mock-node-id"})
+	assert.ErrorContains(t, err, "error from mock NodeGetInfo")
 }
 
 func TestNodePublishVolume(t *testing.T) {
@@ -94,6 +104,11 @@ func TestNodePublishVolume(t *testing.T) {
 	nodePublishVolume.caps = vcs
 	err = child.RunE(RootCmd, []string{"mock-vol-id"})
 	assert.NoError(t, err)
+
+	// force NodePublishVolume to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{"mock-vol-id"})
+	assert.ErrorContains(t, err, "error from mock NodePublishVolume")
 }
 
 func TestNodeStageVolume(t *testing.T) {
@@ -107,6 +122,11 @@ func TestNodeStageVolume(t *testing.T) {
 	nodeStageVolume.caps = vcs
 	err = child.RunE(RootCmd, []string{"mock-vol-id"})
 	assert.NoError(t, err)
+
+	// force NodeStageVolume to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{"mock-vol-id"})
+	assert.ErrorContains(t, err, "error from mock NodeStageVolume")
 }
 
 func TestNodeUnpublishVolume(t *testing.T) {
@@ -115,6 +135,11 @@ func TestNodeUnpublishVolume(t *testing.T) {
 	child := nodeUnpublishVolumeCmd
 	err := child.RunE(RootCmd, []string{"mock-vol-id", "mock/target/path"})
 	assert.NoError(t, err)
+
+	// force NodeUnpublishVolume to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{"mock-vol-id", "mock/target/path"})
+	assert.ErrorContains(t, err, "error from mock NodeUnpublishVolume")
 }
 
 func TestNodeUnstageVolume(t *testing.T) {
@@ -123,4 +148,9 @@ func TestNodeUnstageVolume(t *testing.T) {
 	child := nodeUnstageVolumeCmd
 	err := child.RunE(RootCmd, []string{"mock-vol-id", "mock/target/path"})
 	assert.NoError(t, err)
+
+	// force NodeUnstageVolume to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{"mock-vol-id", "mock/target/path"})
+	assert.ErrorContains(t, err, "error from mock NodeUnstageVolume")
 }

@@ -71,7 +71,16 @@ func TestCreateSnapshotCmd(t *testing.T) {
 	err = child.RunE(RootCmd, []string{"testname"})
 	assert.Error(t, err)
 
-	// TODO: CreateSnapshot error case, tpl.Execute() error case
+	// force CreateSnapshot to return error
+	setupRootCtxToFailCSICalls()
+	createSnapshot.sourceVol = "Mock Volume 1"
+	err = child.RunE(RootCmd, []string{"testname"})
+	assert.ErrorContains(t, err, "error from mock CreateSnapshot")
+
+	// set wrong format to get tpl error
+	setupRoot(t, nodeInfoFormat)
+	err = child.RunE(RootCmd, []string{"testname"})
+	assert.ErrorContains(t, err, "can't evaluate field NodeId")
 }
 
 func TestCreateVolumeCmd(t *testing.T) {
@@ -103,7 +112,16 @@ func TestCreateVolumeCmd(t *testing.T) {
 	err = child.RunE(RootCmd, []string{"testname"})
 	assert.Error(t, err)
 
-	// TODO: more error test cases
+	// force CreateVolume to return error
+	createVolume.sourceVol = ""
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{"testname"})
+	assert.ErrorContains(t, err, "error from mock CreateVolume")
+
+	// set wrong format to get tpl error
+	setupRoot(t, nodeInfoFormat)
+	err = child.RunE(RootCmd, []string{"testname"})
+	assert.ErrorContains(t, err, "can't evaluate field NodeId")
 }
 
 func TestDeleteSnapshotCmd(t *testing.T) {
@@ -118,7 +136,10 @@ func TestDeleteSnapshotCmd(t *testing.T) {
 	err := child.RunE(RootCmd, []string{"testname"})
 	assert.NoError(t, err)
 
-	// TODO: error cases: force controller.client.DeleteSnapshot to return an error
+	// force DeleteSnapshot to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{"testname"})
+	assert.ErrorContains(t, err, "error from mock DeleteSnapshot")
 }
 
 func TestDeleteVolumeCmd(t *testing.T) {
@@ -133,7 +154,10 @@ func TestDeleteVolumeCmd(t *testing.T) {
 	err := child.RunE(RootCmd, []string{"testname"})
 	assert.NoError(t, err)
 
-	// TODO: error cases: force controller.client.DeleteVolume to return an error
+	// force DeleteVolume to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{"testname"})
+	assert.ErrorContains(t, err, "error from mock DeleteVolume")
 }
 
 func TestExpandVolumeCmd(t *testing.T) {
@@ -151,7 +175,10 @@ func TestExpandVolumeCmd(t *testing.T) {
 	err := child.RunE(RootCmd, []string{"1"}) // uses volume ID, which starts at 1 with our mocks
 	assert.NoError(t, err)
 
-	// TODO: error cases: force controller.client.ExpandVolume to return an error
+	// force ExpandVolume to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{"1"})
+	assert.ErrorContains(t, err, "error from mock ControllerExpandVolume")
 }
 
 func TestGetCapabilitiesCmd(t *testing.T) {
@@ -166,7 +193,10 @@ func TestGetCapabilitiesCmd(t *testing.T) {
 	err := child.RunE(RootCmd, []string{})
 	assert.NoError(t, err)
 
-	// TODO: error cases: force controller.client.ControllerGetCapabilities to return an error
+	// force GetCapabilities to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{})
+	assert.ErrorContains(t, err, "error from mock ControllerGetCapabilities")
 }
 
 func TestGetCapacityCmd(t *testing.T) {
@@ -192,7 +222,10 @@ func TestGetCapacityCmd(t *testing.T) {
 	err := child.RunE(RootCmd, []string{})
 	assert.NoError(t, err)
 
-	// TODO: error cases: force controller.client.GetCapacity to return an error
+	// force GetCapacity to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{})
+	assert.ErrorContains(t, err, "error from mock GetCapacity")
 }
 
 func TestListSnapshotsCmd(t *testing.T) {
@@ -218,7 +251,18 @@ func TestListSnapshotsCmd(t *testing.T) {
 	err = child.RunE(RootCmd, []string{})
 	assert.NoError(t, err)
 
-	// TODO: error cases
+	// force ListSnapshots to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{})
+	assert.ErrorContains(t, err, "error from mock ListSnapshots")
+
+	// set wrong format to get tpl error, with paging enabled
+	listSnapshots.paging = true
+	setupRoot(t, nodeInfoFormat)
+	err = child.RunE(RootCmd, []string{})
+	assert.ErrorContains(t, err, "can't evaluate field NodeId")
+
+	// TODO: more error cases
 }
 
 func TestListVolumesCmd(t *testing.T) {
@@ -242,6 +286,16 @@ func TestListVolumesCmd(t *testing.T) {
 	err = child.RunE(RootCmd, []string{})
 	assert.NoError(t, err)
 
+	// force ListVolumes to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{})
+	assert.ErrorContains(t, err, "error from mock ListVolumes")
+
+	// set wrong format to get tpl error, with paging enabled
+	listVolumes.paging = true
+	setupRoot(t, nodeInfoFormat)
+	err = child.RunE(RootCmd, []string{})
+	assert.ErrorContains(t, err, "can't evaluate field NodeId")
 	// TODO: error cases
 }
 
@@ -270,7 +324,10 @@ func TestPublishVolumeCmd(t *testing.T) {
 	err := child.RunE(RootCmd, []string{"1"})
 	assert.NoError(t, err)
 
-	// TODO: error cases: force controller.client.ControllerPublishVolume to return an error
+	// force ControllerPublishVolume to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{"1"})
+	assert.ErrorContains(t, err, "error from mock ControllerPublishVolume")
 }
 
 func TestUnpublishVolumeCmd(t *testing.T) {
@@ -286,7 +343,10 @@ func TestUnpublishVolumeCmd(t *testing.T) {
 	err := child.RunE(RootCmd, []string{"1"})
 	assert.NoError(t, err)
 
-	// TODO: error cases: force controller.client.ControllerPublishVolume to return an error
+	// force ControllerUnpublishVolume to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{"1"})
+	assert.ErrorContains(t, err, "error from mock ControllerUnpublishVolume")
 }
 
 func TestValidateVolumeCapabilitiesCmd(t *testing.T) {
@@ -313,5 +373,8 @@ func TestValidateVolumeCapabilitiesCmd(t *testing.T) {
 	err := child.RunE(RootCmd, []string{"1"})
 	assert.NoError(t, err)
 
-	// TODO: error cases: force controller.client.ValidateVolumeCapabilities to return an error
+	// force ValidateVolumeCapabilities to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{"1"})
+	assert.ErrorContains(t, err, "error from mock ValidateVolumeCapabilities")
 }
