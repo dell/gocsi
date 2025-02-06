@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/dell/gocsi/mock/service"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,6 +23,19 @@ func TestNodeCmd(t *testing.T) {
 	setupRoot(t, pluginCapsFormat)
 	err := nodeCmd.PersistentPreRunE(nodeCmd, []string{})
 	assert.NoError(t, err)
+
+	// save original func so we can revert
+	cmd := RootCmd.PersistentPreRunE
+	// test case: error
+	// force RootCmd to return error
+	RootCmd.PersistentPreRunE = func(_ *cobra.Command, _ []string) error {
+		return fmt.Errorf("test error")
+	}
+	err = nodeCmd.PersistentPreRunE(nodeCmd, []string{})
+	assert.ErrorContains(t, err, "test error")
+
+	// restore original func back so other UT won't fail
+	RootCmd.PersistentPreRunE = cmd
 }
 
 func TestNodeExpandVolumeCmd(t *testing.T) {
@@ -76,6 +91,11 @@ func TestNodeGetVolumeStatsCmd(t *testing.T) {
 	setupRootCtxToFailCSICalls()
 	err = child.RunE(RootCmd, []string{"Mock Volume 2:/root/mock-vol:/root/mock/patch"})
 	assert.ErrorContains(t, err, "error from mock NodeGetVolumeStats")
+
+	// set wrong format to get tpl error, with paging enabled
+	setupRoot(t, nodeInfoFormat)
+	err = child.RunE(RootCmd, []string{"Mock Volume 2:/root/mock-vol:/root/mock/patch"})
+	assert.ErrorContains(t, err, "can't evaluate field NodeId")
 }
 
 func TestNodeGetInfo(t *testing.T) {
