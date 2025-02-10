@@ -6,35 +6,47 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/metadata"
 )
 
 func TestGetRequestID(t *testing.T) {
-	// Test case: GetRequestID should return that there is no available ID
-	ctx := context.Background()
-	requestID := uint64(0) // 0 is an invalid request ID
-
-	actualID, available := GetRequestID(ctx)
-	if available {
-		t.Errorf("Expected request ID to be unavailable, got %v", available)
+	tests := []struct {
+		name          string
+		ctx           context.Context
+		wantID        uint64
+		wantAvailable bool
+	}{
+		{
+			name:          "Negative test: no ID in context",
+			ctx:           context.Background(),
+			wantID:        0,
+			wantAvailable: false,
+		},
+		{
+			name: "Get request ID from incoming context",
+			ctx: metadata.NewIncomingContext(context.Background(), metadata.MD{
+				RequestIDKey: []string{"41"},
+			}),
+			wantID:        41,
+			wantAvailable: true,
+		},
+		{
+			name: "Get request ID from outgoing context",
+			ctx: metadata.NewOutgoingContext(context.Background(), metadata.MD{
+				RequestIDKey: []string{"102"},
+			}),
+			wantID:        102,
+			wantAvailable: true,
+		},
 	}
-	if actualID != requestID {
-		t.Errorf("Expected request ID to be %d, got %d", requestID, actualID)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actualID, actualAvailable := GetRequestID(tt.ctx)
+			assert.Equal(t, tt.wantID, actualID)
+			assert.Equal(t, tt.wantAvailable, actualAvailable)
+		})
 	}
-	/*
-	   // Test case: GetRequestID should return that there is an available ID
-	   requestID = uint64(123)
-	   ctxWithID := context.WithValue(ctx, ctxRequestIDKey, requestID)
-
-	   actualID, available = GetRequestID(ctxWithID)
-
-	   	if !available {
-	   		t.Errorf("Expected request ID to be available, got %v", available)
-	   	}
-
-	   	if actualID != requestID {
-	   		t.Errorf("Expected request ID to be %d, got %d", requestID, actualID)
-	   	}
-	*/
 }
 
 func TestWithEnviron(t *testing.T) {
