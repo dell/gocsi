@@ -14,6 +14,7 @@ import (
 	"github.com/dell/gocsi/utils"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
+	"path/filepath"
 )
 
 var _ = Describe("ParseMethod", func() {
@@ -179,10 +180,14 @@ var _ = Describe("GetCSIEndpoint", func() {
 	Context("Invalid Implied Sock File", func() {
 		shouldBeInvalid := func() {
 			Ω(err).Should(HaveOccurred())
-			Ω(err.Error()).Should(Equal(fmt.Sprintf(
-				"invalid implied sock file: %[1]s: "+
-					"open %[1]s: no such file or directory",
-				expEndpoint)))
+			Ω(err.Error()).Should(
+				// os.Create() error for an invalid file name is different when running the test
+				// in Linux or Windows. The following substring indicates enough that file creation
+				// was attempted and failed, so we haven't allowed a bad file name to be used as the endpoint.
+				ContainSubstring(fmt.Sprintf(
+					"invalid implied sock file: %s: open %s: ",
+					expEndpoint, filepath.Clean(expEndpoint))),
+			)
 		}
 		Context("Xtcp5:/localhost:5000", func() {
 			It("Should Be An Invalid Implied Sock File", shouldBeInvalid)

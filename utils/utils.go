@@ -88,14 +88,14 @@ func ParseProtoAddr(protoAddr string) (proto string, addr string, err error) {
 	// First check to see if the file exists at the specified path.
 	// If it does then assume it's a valid file path and return it.
 	//
-	// Otherwise attempt to create the file. If the file can be created
+	// Otherwise, attempt to create the file. If the file can be created
 	// without error then remove the file and return the result a UNIX
 	// socket file path.
 	if !protoAddrGuessRX.MatchString(protoAddr) {
 
 		// If the file already exists then assume it's a valid sock
 		// file and return it.
-		if _, err := os.Stat(protoAddr); !os.IsNotExist(err) {
+		if _, err := os.Stat(protoAddr); os.IsExist(err) {
 			return "unix", protoAddr, nil
 		}
 		f, err := os.Create(filepath.Clean(protoAddr))
