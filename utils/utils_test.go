@@ -12,6 +12,8 @@ import (
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/dell/gocsi/mock/service"
 	"github.com/dell/gocsi/utils"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 	"path/filepath"
@@ -851,4 +853,215 @@ func TestIsVolumeCapabilityCompatible(t *testing.T) {
 	out, err := utils.IsVolumeCapabilityCompatible(a, b)
 	Ω(out).Should(BeTrue())
 	Ω(err).Should(BeNil())
+}
+
+func TestChainUnaryClient(t *testing.T) {
+	// Test case: Empty interceptors
+	var interceptors []grpc.UnaryClientInterceptor
+	chain0 := utils.ChainUnaryClient(interceptors...)
+	assert.NotNil(t, chain0)
+
+	// Test case: Invoking the non-interceptor chain
+	ctx := context.Background()
+	method := "TestMethod"
+	req := "TestRequest"
+	rep := "TestReply"
+	cc := &grpc.ClientConn{}
+	var opts []grpc.CallOption
+	invoker := func(
+		ctx context.Context,
+		method string,
+		req, rep interface{},
+		cc *grpc.ClientConn,
+		opts ...grpc.CallOption,
+	) error {
+		// Do something
+		return nil
+	}
+	err := chain0(ctx, method, req, rep, cc, invoker, opts...)
+	assert.NoError(t, err)
+
+	// Test case: Single interceptor
+	interceptors = []grpc.UnaryClientInterceptor{
+		func(
+			ctx context.Context,
+			method string,
+			req, rep interface{},
+			cc *grpc.ClientConn,
+			invoker grpc.UnaryInvoker,
+			opts ...grpc.CallOption,
+		) error {
+			// Do something
+			return invoker(ctx, method, req, rep, cc, opts...)
+		},
+	}
+	chain := utils.ChainUnaryClient(interceptors...)
+	assert.NotNil(t, chain)
+
+	// Test case: Multiple interceptors
+	interceptors = []grpc.UnaryClientInterceptor{
+		func(
+			ctx context.Context,
+			method string,
+			req, rep interface{},
+			cc *grpc.ClientConn,
+			invoker grpc.UnaryInvoker,
+			opts ...grpc.CallOption,
+		) error {
+			// Do something
+			return invoker(ctx, method, req, rep, cc, opts...)
+		},
+		func(
+			ctx context.Context,
+			method string,
+			req, rep interface{},
+			cc *grpc.ClientConn,
+			invoker grpc.UnaryInvoker,
+			opts ...grpc.CallOption,
+		) error {
+			// Do something else
+			return invoker(ctx, method, req, rep, cc, opts...)
+		},
+	}
+	chainN := utils.ChainUnaryClient(interceptors...)
+	assert.NotNil(t, chainN)
+
+	// Test case: Invoking the multi-interceptor chain
+	ctx = context.Background()
+	method = "TestMethod"
+	req = "TestRequest"
+	rep = "TestReply"
+	cc = &grpc.ClientConn{}
+	opts = []grpc.CallOption{}
+	invoker = func(
+		ctx context.Context,
+		method string,
+		req, rep interface{},
+		cc *grpc.ClientConn,
+		opts ...grpc.CallOption,
+	) error {
+		// Do something
+		return nil
+	}
+	err = chainN(ctx, method, req, rep, cc, invoker, opts...)
+	assert.NoError(t, err)
+}
+
+func TestChainUnaryServer(t *testing.T) {
+	// Test case: Empty interceptors
+	var interceptors []grpc.UnaryServerInterceptor
+	chain0 := utils.ChainUnaryServer(interceptors...)
+	assert.NotNil(t, chain0)
+
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return "response", nil
+	}
+	resp, err := chain0(context.Background(), "request", nil, handler)
+	assert.NoError(t, err)
+	assert.Equal(t, "response", resp)
+
+	// Test case: Single interceptor
+	interceptors = []grpc.UnaryServerInterceptor{
+		func(
+			ctx context.Context,
+			req interface{},
+			info *grpc.UnaryServerInfo,
+			handler grpc.UnaryHandler,
+		) (interface{}, error) {
+			// Do something
+			return handler(ctx, req)
+		},
+	}
+	chain := utils.ChainUnaryServer(interceptors...)
+	assert.NotNil(t, chain)
+
+	// Test case: Multiple interceptors
+	interceptors = []grpc.UnaryServerInterceptor{
+		func(
+			ctx context.Context,
+			req interface{},
+			info *grpc.UnaryServerInfo,
+			handler grpc.UnaryHandler,
+		) (interface{}, error) {
+			// Do something
+			return handler(ctx, req)
+		},
+		func(
+			ctx context.Context,
+			req interface{},
+			info *grpc.UnaryServerInfo,
+			handler grpc.UnaryHandler,
+		) (interface{}, error) {
+			// Do something else
+			return handler(ctx, req)
+		},
+	}
+	chainN := utils.ChainUnaryServer(interceptors...)
+	assert.NotNil(t, chainN)
+
+	// Test case: Invoking the chain
+	ctx := context.Background()
+	req := "TestRequest"
+	info := &grpc.UnaryServerInfo{}
+	handler = func(
+		ctx context.Context,
+		req interface{},
+	) (interface{}, error) {
+		// Do something
+		return "TestResponse", nil
+	}
+
+	rep, err := chainN(ctx, req, info, handler)
+	assert.NoError(t, err)
+	assert.Equal(t, "TestResponse", rep)
+}
+
+func TestIsNilResponse(t *testing.T) {
+	tests := []struct {
+		name string
+		rep  interface{}
+		want bool
+	}{
+		{
+			name: "Nil Response",
+			rep:  nil,
+			want: true,
+		},
+		{
+			name: "Non-Nil Response",
+			rep:  &csi.CreateVolumeResponse{},
+			want: false,
+		},
+		{
+			name: "Nil Response Inside Interface",
+			rep: func() interface{} {
+				var rep *csi.CreateVolumeResponse
+				return rep
+			}(),
+			want: true,
+		},
+		{
+			name: "Non-Nil Response Inside Interface",
+			rep: func() interface{} {
+				rep := &csi.CreateVolumeResponse{}
+				return rep
+			}(),
+			want: false,
+		},
+		{
+			name: "Non-Response Type Inside Interface",
+			rep: func() interface{} {
+				var rep int
+				return rep
+			}(),
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := utils.IsNilResponse(tt.rep); got != tt.want {
+				t.Errorf("IsNilResponse() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
