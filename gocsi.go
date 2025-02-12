@@ -128,10 +128,6 @@ func Run(
 		sp.GracefulStop(ctx)
 		rmSockFile()
 		log.Info("server stopped gracefully")
-	}, func() {
-		sp.Stop(ctx)
-		rmSockFile()
-		log.Info("server aborted")
 	})
 
 	if err := sp.Serve(ctx, l); err != nil {
@@ -496,7 +492,7 @@ func (sp *StoragePlugin) getEnvBool(ctx context.Context, key string) bool {
 	return false
 }
 
-func trapSignals(onExit, onAbort func()) {
+func trapSignals(onExit func()) {
 	sigc := make(chan os.Signal, 1)
 	sigs := []os.Signal{
 		syscall.SIGTERM,
@@ -507,17 +503,6 @@ func trapSignals(onExit, onAbort func()) {
 	signal.Notify(sigc, sigs...)
 	go func() {
 		for s := range sigc {
-			ok, graceful := isExitSignal(s)
-			if !ok {
-				continue
-			}
-			if !graceful {
-				log.WithField("signal", s).Error("received signal; aborting")
-				if onAbort != nil {
-					onAbort()
-				}
-				osExit(1)
-			}
 			log.WithField("signal", s).Info("received signal; shutting down")
 			if onExit != nil {
 				onExit()
@@ -525,21 +510,6 @@ func trapSignals(onExit, onAbort func()) {
 			osExit(0)
 		}
 	}()
-}
-
-// isExitSignal returns a flag indicating whether a signal SIGHUP,
-// SIGINT, SIGTERM, or SIGQUIT. The second return value is whether it is a
-// graceful exit. This flag is true for SIGTERM, SIGHUP, SIGINT, and SIGQUIT.
-func isExitSignal(s os.Signal) (bool, bool) {
-	switch s {
-	case syscall.SIGTERM,
-		syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGQUIT:
-		return true, true
-	default:
-		return false, false
-	}
 }
 
 type logger struct {
