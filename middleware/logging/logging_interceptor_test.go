@@ -9,6 +9,9 @@ import (
 	"testing"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
+	csictx "github.com/dell/gocsi/context"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/metadata"
 )
 
 func TestWithRequestLogging(t *testing.T) {
@@ -127,57 +130,109 @@ func TestWithDisableLogVolumeContext(t *testing.T) {
 func TestHandle(t *testing.T) {
 	w := &bytes.Buffer{}
 
-	// Create a mock context
-	ctx := context.Background()
+	defaultCtx := context.Background()
 
 	// Create a mock method
 	method := "example.ExampleMethod"
 
-	// Empty request for interceptor to log
-	req := &csi.CreateVolumeRequest{}
-
-	// Empty response for interceptor to log
-	rep := &csi.CreateVolumeResponse{}
-
 	// Mock error to be returned by next function
-	err := errors.New("example error")
+	defaultErr := errors.New("example error")
+	defaultReq := &csi.CreateVolumeResponse{}
+	defaultRes := &csi.CreateVolumeResponse{}
 
-	// Create a mock next function
-	next := func() (interface{}, error) {
-		return rep, err
+	defaultNext := func() (interface{}, error) {
+		return defaultRes, nil
 	}
+
 	tests := []struct {
-		name string
-		i    *interceptor
+		name    string
+		i       *interceptor
+		req     interface{}
+		next    func() (interface{}, error)
+		getCtx  func() context.Context
+		wantRes interface{}
+		wantErr bool
 	}{
 		{
-			name: "request and response disabled",
+			name: "nil request",
 			i:    &interceptor{},
+			req:  nil,
+			next: func() (interface{}, error) {
+				return nil, defaultErr
+			},
+			wantRes: nil,
+			wantErr: true,
 		},
 		{
-			name: "request enabled",
+			name:    "request and response disabled",
+			i:       &interceptor{},
+			req:     defaultReq,
+			next:    defaultNext,
+			wantRes: defaultRes,
+			wantErr: false,
+		},
+		{
+			name: "with request logging",
 			i:    newLoggingInterceptor(WithRequestLogging(w)),
+			req:  defaultReq,
+			next: defaultNext,
+			getCtx: func() context.Context {
+				md := metadata.Pairs(
+					csictx.RequestIDKey, "123",
+				)
+				return metadata.NewIncomingContext(context.Background(), md)
+			},
+			wantRes: defaultRes,
+			wantErr: false,
 		},
 		{
-			name: "response enabled",
+			name:    "with response logging",
+			i:       newLoggingInterceptor(WithResponseLogging(w)),
+			req:     defaultReq,
+			next:    defaultNext,
+			wantRes: defaultRes,
+			wantErr: false,
+		},
+		{
+			name: "log failed response",
 			i:    newLoggingInterceptor(WithResponseLogging(w)),
+			req:  defaultReq,
+			next: func() (interface{}, error) {
+				return nil, defaultErr
+			},
+			wantRes: nil,
+			wantErr: true,
+		},
+		{
+			name: "with request and response logging",
+			i:    newLoggingInterceptor(WithRequestLogging(w), WithResponseLogging(w)),
+			req:  defaultReq,
+			next: defaultNext,
+			getCtx: func() context.Context {
+				md := metadata.Pairs(
+					csictx.RequestIDKey, "234",
+				)
+				return metadata.NewIncomingContext(context.Background(), md)
+			},
+			wantRes: defaultRes,
+			wantErr: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Call the handle function
-			result, resultErr := tt.i.handle(ctx, method, req, next)
-
-			// Check if the result is expected
-			if result != rep {
-				t.Errorf("Expected result to be %v, got %v", rep, result)
+			ctx := defaultCtx
+			if tt.getCtx != nil {
+				ctx = tt.getCtx()
 			}
-
-			// Check if the error is expected
-			if resultErr != err {
-				t.Errorf("Expected error to be %v, got %v", err, resultErr)
+			resp, err := tt.i.handle(ctx, method, tt.req, tt.next)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
 			}
+			assert.Equal(t, tt.wantRes, resp)
 		})
 	}
 }

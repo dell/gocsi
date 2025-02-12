@@ -5,7 +5,13 @@ import (
 	"testing"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"os"
+	"reflect"
+	"strings"
 )
 
 func TestControllerCreateVolume(t *testing.T) {
@@ -1191,6 +1197,367 @@ func TestNodeGetPluginInfoResponse(t *testing.T) {
 			err := interceptor.validateResponse(context.Background(), "", tt.resp)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ValidateNodeGetPluginInfoResponse() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestSetPathLimit(t *testing.T) {
+	// Test case: Default value
+	assert.Equal(t, setPathLimit(10), 10)
+
+	// Test case: Custom value
+	os.Setenv(maxPathLimit, "20")
+	assert.Equal(t, setPathLimit(10), 20)
+
+	// Test case: Invalid value
+	os.Setenv(maxPathLimit, "invalid")
+	assert.Equal(t, setPathLimit(10), 10)
+
+	// Test case: Empty value
+	os.Setenv(maxPathLimit, "")
+	assert.Equal(t, setPathLimit(10), 10)
+
+	// Test case: Value less than default
+	os.Setenv(maxPathLimit, "5")
+	assert.Equal(t, setPathLimit(10), 10)
+}
+
+func TestValidateFieldSizes(t *testing.T) {
+	type TestStruct struct {
+		Name        string
+		Description string
+		NodeId      string
+		Map         map[string]string
+	}
+
+	largeMap := generateLargeMap()
+
+	tests := []struct {
+		name    string
+		msg     TestStruct
+		wantErr bool
+	}{
+		{
+			name: "Valid Field Sizes",
+			msg: TestStruct{
+				Name:        "test",
+				Description: "description",
+				NodeId:      "node",
+				Map:         map[string]string{"key": "value"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Valid Map Path Key Length",
+			msg: TestStruct{
+				Name:        "test",
+				Description: "description",
+				NodeId:      "node",
+				Map:         map[string]string{"Path": "value"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Exceeds Max Field String Length",
+			msg: TestStruct{
+				Name:        strings.Repeat("a", maxFieldString+1),
+				Description: "description",
+				NodeId:      "node",
+				Map:         map[string]string{"key": "value"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Exceeds Max Field NodeID Length",
+			msg: TestStruct{
+				Name:        "test",
+				Description: "description",
+				NodeId:      strings.Repeat("a", maxFieldNodeID+1),
+				Map:         map[string]string{"key": "value"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Exceeds Max Map Value Length",
+			msg: TestStruct{
+				Name:        "test",
+				Description: "description",
+				NodeId:      "node",
+				Map:         map[string]string{"key": strings.Repeat("a", maxFieldMap+1)},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Exceeds Max Map Key Length",
+			msg: TestStruct{
+				Name:        "test",
+				Description: "description",
+				NodeId:      "node",
+				Map:         map[string]string{strings.Repeat("a", maxFieldMap+1): "value"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Exceeds Max Aggregated Map Size",
+			msg: TestStruct{
+				Name:        "test",
+				Description: "description",
+				NodeId:      "node",
+				Map:         largeMap,
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateFieldSizes(&tt.msg)
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Equal(t, codes.InvalidArgument, status.Code(err))
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+// helper function that generates a map[string]string with keys and values of length maxFieldString
+// and ensures that the total length of all keys and values in the map exceeds maxFieldMap
+func generateLargeMap() map[string]string {
+	result := make(map[string]string)
+	kch := 'a'
+
+	totalSize := 0
+	for {
+		// Generate keys and values of length maxFieldString
+		key := strings.Repeat(string(kch), maxFieldString)
+		value := strings.Repeat("0", maxFieldString)
+		result[key] = value
+		totalSize += maxFieldString * 2
+		// Interrupt the loop if the total size exceeds maxFieldMap
+		if totalSize > maxFieldMap {
+			break
+		}
+		kch++ // unprintable character are fine too in this case
+	}
+
+	return result
+}
+
+func TestHandle(t *testing.T) {
+	// Create a new instance of the interceptor
+	//interceptor := newSpecValidator()
+
+	// Create a mock context
+	ctx := context.Background()
+
+	// Create a mock method
+	method := "/csi.v1.Controller/CreateVolume"
+
+	// Create a mock request
+	req := &csi.CreateVolumeRequest{
+		Name:    "test-volume",
+		Secrets: map[string]string{"foo": "bar"},
+		VolumeCapabilities: []*csi.VolumeCapability{
+			{
+				AccessType: &csi.VolumeCapability_Mount{
+					Mount: &csi.VolumeCapability_MountVolume{},
+				},
+				AccessMode: &csi.VolumeCapability_AccessMode{
+					Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+				},
+			},
+		},
+	}
+
+	simpleResp := &csi.CreateVolumeResponse{
+		Volume: &csi.Volume{
+			VolumeId: "test-volume",
+		},
+	}
+	// Create a mock handler function
+	handler := func() (interface{}, error) {
+		return simpleResp, nil
+	}
+
+	// Test table
+	tests := []struct {
+		name    string
+		opts    []Option
+		req     interface{}
+		next    func() (interface{}, error)
+		want    interface{}
+		wantErr bool
+	}{
+		{
+			name: "Test case 1",
+			opts: []Option{
+				WithRequestValidation(),
+				WithResponseValidation(),
+			},
+			req:     req,
+			next:    handler,
+			want:    simpleResp,
+			wantErr: false,
+		},
+		{
+			name: "Nil request, handler resp",
+			opts: []Option{
+				WithRequestValidation(),
+				WithResponseValidation(),
+			},
+			req:     nil,
+			next:    handler,
+			want:    simpleResp,
+			wantErr: false,
+		},
+		{
+			name: "Test case 3",
+			opts: []Option{
+				WithRequestValidation(),
+				WithResponseValidation(),
+			},
+			req: &csi.CreateVolumeRequest{
+				Name:    "test-volume",
+				Secrets: map[string]string{"foo": "bar"},
+				VolumeCapabilities: []*csi.VolumeCapability{
+					{
+						AccessType: &csi.VolumeCapability_Mount{
+							Mount: &csi.VolumeCapability_MountVolume{},
+						},
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+						},
+					},
+				},
+			},
+			next:    handler,
+			want:    simpleResp,
+			wantErr: false,
+		},
+		{
+			name: "Test case 4",
+			opts: []Option{
+				WithRequestValidation(),
+				WithResponseValidation(),
+			},
+			req: &csi.CreateVolumeRequest{
+				Name:    "test-volume",
+				Secrets: map[string]string{"foo": "bar"},
+				VolumeCapabilities: []*csi.VolumeCapability{
+					{
+						AccessType: &csi.VolumeCapability_Mount{
+							Mount: &csi.VolumeCapability_MountVolume{},
+						},
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+						},
+					},
+				},
+			},
+			next: func() (interface{}, error) {
+				return nil, status.Error(codes.Internal, "Internal server error")
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Request with long fields",
+			opts: []Option{
+				WithRequestValidation(),
+				WithResponseValidation(),
+			},
+			req: &csi.CreateVolumeRequest{
+				Name: strings.Repeat("n", maxFieldString+1),
+			},
+			next:    handler,
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Request with empty GetVolumeId()",
+			opts: []Option{
+				WithRequestValidation(),
+				WithResponseValidation(),
+			},
+			req: &csi.DeleteVolumeRequest{
+				VolumeId: "",
+			},
+			next:    handler,
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Request with empty GetVolumeContext()",
+			opts: []Option{
+				WithRequestValidation(),
+				WithRequiresVolumeContext(),
+			},
+			req: &csi.ControllerPublishVolumeRequest{
+				VolumeId:      "volume-id",
+				VolumeContext: nil,
+			},
+			next:    handler,
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Response with long fields",
+			opts: []Option{
+				WithResponseValidation(),
+			},
+			req: &csi.NodeGetInfoRequest{},
+			next: func() (interface{}, error) {
+				return &csi.NodeGetInfoResponse{
+					NodeId: strings.Repeat("d", maxFieldNodeID+1),
+				}, nil
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Response with empty GetVolumeId()",
+			opts: []Option{
+				WithRequestValidation(),
+				WithRequiresVolumeContext(),
+			},
+			req: &csi.ControllerPublishVolumeRequest{
+				VolumeId:      "volume-id",
+				VolumeContext: nil,
+			},
+			next:    handler,
+			want:    nil,
+			wantErr: true,
+		},
+	}
+
+	// Run the tests
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a new interceptor with the options from the test
+			i := newSpecValidator(tt.opts...)
+
+			// Call the handle function
+			resp, err := i.handle(ctx, method, tt.req, tt.next)
+
+			// Assert the response and error
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("Expected no error, but got: %v", err)
+				}
+				return
+			}
+
+			if tt.wantErr {
+				t.Errorf("Expected an error, but got nil")
+				return
+			}
+
+			// Assert the response
+			if !reflect.DeepEqual(resp, tt.want) {
+				t.Errorf("Expected response: %v, got: %v", tt.want, resp)
 			}
 		})
 	}

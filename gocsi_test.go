@@ -18,13 +18,14 @@ import (
 
 func TestRun(t *testing.T) {
 	originalOsExit := osExit
+	defer func() { osExit = originalOsExit }()
 
-	calledOsExit := make(chan struct{})
+	osExitCh := make(chan struct{})
 	osExit = func(_ int) {
-		calledOsExit <- struct{}{}
+		close(osExitCh)
 	}
 
-	user, err := user.Current()
+	osUser, err := user.Current()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,56 +37,45 @@ func TestRun(t *testing.T) {
 
 	endpoint := fmt.Sprintf("unix://%s/csi.sock", wd)
 
+	envVars := [][]string{
+		{EnvVarDebug, "true"},
+		{EnvVarLogLevel, "debug"},
+		{EnvVarEndpoint, endpoint},
+		{EnvVarEndpointPerms, "0777"},
+		{EnvVarCredsCreateVol, "true"},
+		{EnvVarCredsDeleteVol, "true"},
+		{EnvVarCredsCtrlrPubVol, "true"},
+		{EnvVarCredsCtrlrUnpubVol, "true"},
+		{EnvVarCredsNodeStgVol, "true"},
+		{EnvVarCredsNodePubVol, "true"},
+		{EnvVarDisableFieldLen, "true"},
+		{EnvVarRequireStagingTargetPath, "true"},
+		{EnvVarRequireVolContext, "true"},
+		{EnvVarCreds, "true"},
+		{EnvVarSpecValidation, "false"},
+		{EnvVarLoggingDisableVolCtx, "true"},
+		{EnvVarPluginInfo, "true"},
+		{EnvVarSerialVolAccessTimeout, "10s"},
+		{EnvVarSpecReqValidation, "true"},
+		{EnvVarSpecRepValidation, "true"},
+		{EnvVarEndpointUser, osUser.Name},
+		{EnvVarEndpointGroup, osUser.Gid},
+		{EnvVarSerialVolAccessEtcdEndpoints, "http://127.0.0.1:2379"},
+	}
+
 	defer func() {
-		osExit = originalOsExit
-		os.Unsetenv(EnvVarDebug)
-		os.Unsetenv(EnvVarLogLevel)
-		os.Unsetenv(EnvVarEndpoint)
-		os.Unsetenv(EnvVarEndpointPerms)
-		os.Unsetenv(EnvVarCredsCreateVol)
-		os.Unsetenv(EnvVarCredsDeleteVol)
-		os.Unsetenv(EnvVarCredsCtrlrPubVol)
-		os.Unsetenv(EnvVarCredsCtrlrUnpubVol)
-		os.Unsetenv(EnvVarCredsNodeStgVol)
-		os.Unsetenv(EnvVarCredsNodePubVol)
-		os.Unsetenv(EnvVarDisableFieldLen)
-		os.Unsetenv(EnvVarRequireStagingTargetPath)
-		os.Unsetenv(EnvVarRequireVolContext)
-		os.Unsetenv(EnvVarCreds)
-		os.Unsetenv(EnvVarSpecValidation)
-		os.Unsetenv(EnvVarLoggingDisableVolCtx)
-		os.Unsetenv(EnvVarPluginInfo)
-		os.Unsetenv(EnvVarSerialVolAccessTimeout)
-		os.Unsetenv(EnvVarSpecReqValidation)
-		os.Unsetenv(EnvVarSpecRepValidation)
-		os.Unsetenv(EnvVarEndpointUser)
-		os.Unsetenv(EnvVarEndpointGroup)
-		os.Unsetenv(EnvVarSerialVolAccessEtcdEndpoints)
+		for _, env := range envVars {
+			if err := os.Unsetenv(env[0]); err != nil {
+				t.Fatalf("failed to unset env var %s: %v", env[0], err)
+			}
+		}
 	}()
 
-	os.Setenv(EnvVarDebug, "true")
-	os.Setenv(EnvVarLogLevel, "debug")
-	os.Setenv(EnvVarEndpoint, endpoint)
-	os.Setenv(EnvVarEndpointPerms, "0777")
-	os.Setenv(EnvVarCredsCreateVol, "true")
-	os.Setenv(EnvVarCredsDeleteVol, "true")
-	os.Setenv(EnvVarCredsCtrlrPubVol, "true")
-	os.Setenv(EnvVarCredsCtrlrUnpubVol, "true")
-	os.Setenv(EnvVarCredsNodeStgVol, "true")
-	os.Setenv(EnvVarCredsNodePubVol, "true")
-	os.Setenv(EnvVarDisableFieldLen, "true")
-	os.Setenv(EnvVarRequireStagingTargetPath, "true")
-	os.Setenv(EnvVarRequireVolContext, "true")
-	os.Setenv(EnvVarCreds, "true")
-	os.Setenv(EnvVarSpecValidation, "false")
-	os.Setenv(EnvVarLoggingDisableVolCtx, "true")
-	os.Setenv(EnvVarPluginInfo, "true")
-	os.Setenv(EnvVarSerialVolAccessTimeout, "10s")
-	os.Setenv(EnvVarSpecReqValidation, "true")
-	os.Setenv(EnvVarSpecRepValidation, "true")
-	os.Setenv(EnvVarEndpointUser, user.Name)
-	os.Setenv(EnvVarEndpointGroup, user.Gid)
-	os.Setenv(EnvVarSerialVolAccessEtcdEndpoints, "http://127.0.0.1:2379")
+	for _, env := range envVars {
+		if err := os.Setenv(env[0], env[1]); err != nil {
+			t.Fatalf("failed to set env var %s: %v", env[0], err)
+		}
+	}
 
 	svc := service.NewServer()
 	go Run(context.Background(), "Dell CSM Driver", "A Dell Container Storage Interface (CSI) Plugin", "", newMockStoragePlugin(svc, svc, svc))
@@ -94,7 +84,8 @@ func TestRun(t *testing.T) {
 	if err := syscall.Kill(syscall.Getpid(), syscall.SIGINT); err != nil {
 		t.Fatalf("failed to send SIGINT: %v", err)
 	}
-	<-calledOsExit
+	// Wait until the server calls osExit() to exit
+	<-osExitCh
 }
 
 func TestRunHelp(_ *testing.T) {
