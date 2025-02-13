@@ -1227,7 +1227,7 @@ func TestValidateFieldSizes(t *testing.T) {
 	type TestStruct struct {
 		Name        string
 		Description string
-		NodeId      string
+		NodeID      string
 		Map         map[string]string
 	}
 
@@ -1243,7 +1243,7 @@ func TestValidateFieldSizes(t *testing.T) {
 			msg: TestStruct{
 				Name:        "test",
 				Description: "description",
-				NodeId:      "node",
+				NodeID:      "node",
 				Map:         map[string]string{"key": "value"},
 			},
 			wantErr: false,
@@ -1253,7 +1253,7 @@ func TestValidateFieldSizes(t *testing.T) {
 			msg: TestStruct{
 				Name:        "test",
 				Description: "description",
-				NodeId:      "node",
+				NodeID:      "node",
 				Map:         map[string]string{"Path": "value"},
 			},
 			wantErr: false,
@@ -1263,7 +1263,7 @@ func TestValidateFieldSizes(t *testing.T) {
 			msg: TestStruct{
 				Name:        strings.Repeat("a", maxFieldString+1),
 				Description: "description",
-				NodeId:      "node",
+				NodeID:      "node",
 				Map:         map[string]string{"key": "value"},
 			},
 			wantErr: true,
@@ -1273,7 +1273,7 @@ func TestValidateFieldSizes(t *testing.T) {
 			msg: TestStruct{
 				Name:        "test",
 				Description: "description",
-				NodeId:      strings.Repeat("a", maxFieldNodeID+1),
+				NodeID:      strings.Repeat("a", maxFieldNodeID+1),
 				Map:         map[string]string{"key": "value"},
 			},
 			wantErr: true,
@@ -1283,7 +1283,7 @@ func TestValidateFieldSizes(t *testing.T) {
 			msg: TestStruct{
 				Name:        "test",
 				Description: "description",
-				NodeId:      "node",
+				NodeID:      "node",
 				Map:         map[string]string{"key": strings.Repeat("a", maxFieldMap+1)},
 			},
 			wantErr: true,
@@ -1293,7 +1293,7 @@ func TestValidateFieldSizes(t *testing.T) {
 			msg: TestStruct{
 				Name:        "test",
 				Description: "description",
-				NodeId:      "node",
+				NodeID:      "node",
 				Map:         map[string]string{strings.Repeat("a", maxFieldMap+1): "value"},
 			},
 			wantErr: true,
@@ -1303,7 +1303,7 @@ func TestValidateFieldSizes(t *testing.T) {
 			msg: TestStruct{
 				Name:        "test",
 				Description: "description",
-				NodeId:      "node",
+				NodeID:      "node",
 				Map:         largeMap,
 			},
 			wantErr: true,

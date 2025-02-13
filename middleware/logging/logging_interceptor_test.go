@@ -8,6 +8,7 @@ import (
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	csictx "github.com/dell/gocsi/context"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -23,6 +24,12 @@ func TestClientLogger(t *testing.T) {
 		cc *grpc.ClientConn,
 		opts ...grpc.CallOption,
 	) error {
+		log.Info("ctx:", ctx)
+		log.Info("req:", req)
+		log.Info("rep:", rep)
+		log.Info("cc:", cc)
+		log.Info("opts:", opts)
+		log.Info("method:", method)
 		return nil
 	}
 
@@ -47,6 +54,8 @@ func TestServerLogger(t *testing.T) {
 		&grpc.UnaryServerInfo{},
 		// grpc.UnaryHandler handler
 		func(ctx context.Context, req interface{}) (interface{}, error) {
+			log.Info("ctx:", ctx)
+			log.Info("req:", req)
 			return &csi.CreateVolumeResponse{}, nil
 		},
 	)

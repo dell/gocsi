@@ -346,6 +346,8 @@ func TestGetPluginInfo(t *testing.T) {
 
 	// set up handler
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		log.Info("ctx:", ctx)
+		log.Info("req:", req)
 		resp := &csi.GetPluginInfoResponse{
 			Name:          "my-plugin",
 			VendorVersion: "1.0.0",

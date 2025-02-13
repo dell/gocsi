@@ -13,6 +13,8 @@ import (
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/dell/gocsi/mock/service"
 	"github.com/dell/gocsi/utils"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -876,6 +878,12 @@ func TestChainUnaryClient(t *testing.T) {
 		opts ...grpc.CallOption,
 	) error {
 		// Do something
+		log.Info("ctx:", ctx)
+		log.Info("req:", req)
+		log.Info("rep:", rep)
+		log.Info("cc:", cc)
+		log.Info("opts:", opts)
+		log.Info("method:", method)
 		return nil
 	}
 	err := chain0(ctx, method, req, rep, cc, invoker, opts...)
@@ -940,7 +948,12 @@ func TestChainUnaryClient(t *testing.T) {
 		cc *grpc.ClientConn,
 		opts ...grpc.CallOption,
 	) error {
-		// Do something
+		log.Info("ctx:", ctx)
+		log.Info("req:", req)
+		log.Info("rep:", rep)
+		log.Info("cc:", cc)
+		log.Info("opts:", opts)
+		log.Info("method:", method)
 		return nil
 	}
 	err = chainN(ctx, method, req, rep, cc, invoker, opts...)
@@ -969,6 +982,9 @@ func TestChainUnaryServer(t *testing.T) {
 			handler grpc.UnaryHandler,
 		) (interface{}, error) {
 			// Do something
+			log.Info("ctx:", ctx)
+			log.Info("req:", req)
+			log.Info("info:", info)
 			return handler(ctx, req)
 		},
 	}
@@ -984,6 +1000,9 @@ func TestChainUnaryServer(t *testing.T) {
 			handler grpc.UnaryHandler,
 		) (interface{}, error) {
 			// Do something
+			log.Info("ctx:", ctx)
+			log.Info("req:", req)
+			log.Info("info:", info)
 			return handler(ctx, req)
 		},
 		func(
@@ -993,6 +1012,9 @@ func TestChainUnaryServer(t *testing.T) {
 			handler grpc.UnaryHandler,
 		) (interface{}, error) {
 			// Do something else
+			log.Info("ctx:", ctx)
+			log.Info("req:", req)
+			log.Info("info:", info)
 			return handler(ctx, req)
 		},
 	}
