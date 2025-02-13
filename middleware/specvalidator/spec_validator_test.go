@@ -2,6 +2,9 @@ package specvalidator
 
 import (
 	"context"
+	"os"
+	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
@@ -9,9 +12,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"os"
-	"reflect"
-	"strings"
 )
 
 func TestControllerCreateVolume(t *testing.T) {
@@ -1348,7 +1348,7 @@ func generateLargeMap() map[string]string {
 
 func TestHandle(t *testing.T) {
 	// Create a new instance of the interceptor
-	//interceptor := newSpecValidator()
+	// interceptor := newSpecValidator()
 
 	// Create a mock context
 	ctx := context.Background()
@@ -1541,7 +1541,6 @@ func TestHandle(t *testing.T) {
 
 			// Call the handle function
 			resp, err := i.handle(ctx, method, tt.req, tt.next)
-
 			// Assert the response and error
 			if err != nil {
 				if !tt.wantErr {

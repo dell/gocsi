@@ -1,10 +1,10 @@
 package requestid
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
-	"errors"
 	csictx "github.com/dell/gocsi/context"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
@@ -32,7 +32,6 @@ func TestNewRequestIDInjector(t *testing.T) {
 }
 
 func TestInterceptorHandleServer(t *testing.T) {
-
 	tests := []struct {
 		name    string
 		id      uint64

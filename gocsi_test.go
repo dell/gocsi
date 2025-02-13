@@ -16,6 +16,7 @@ import (
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/dell/gocsi/mock/service"
 	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )
 
@@ -497,5 +498,52 @@ func newMockStoragePlugin(controller csi.ControllerServer, identity csi.Identity
 			//   * NodePublishVolumeRequest.PublishContext
 			EnvVarRequirePubContext + "=true",
 		},
+	}
+}
+
+func TestStoragePlugin_Serve(t *testing.T) {
+	svc := service.NewServer()
+
+	// Create a new listener
+	lis, err := net.Listen("unix", "test.sock")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer lis.Close()
+
+	defer os.Unsetenv(EnvVarMode)
+
+	// Set up the context
+	ctx := context.Background()
+
+	tests := []struct {
+		name          string
+		controllerSvc csi.ControllerServer
+		nodeSvc       csi.NodeServer
+		mode          string
+		expectErr     string
+	}{
+		{
+			name:          "Test missing controller service",
+			controllerSvc: nil,
+			nodeSvc:       svc,
+			mode:          "controller",
+			expectErr:     "controller service is required",
+		},
+		{
+			name:          "Test missing node service",
+			controllerSvc: svc,
+			nodeSvc:       nil,
+			mode:          "node",
+			expectErr:     "node service is required",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sp := newMockStoragePlugin(tt.controllerSvc, svc, tt.nodeSvc)
+			os.Setenv(EnvVarMode, tt.mode)
+			err := sp.Serve(ctx, lis)
+			assert.ErrorContains(t, err, tt.expectErr)
+		})
 	}
 }
