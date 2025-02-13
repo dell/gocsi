@@ -967,6 +967,8 @@ func TestChainUnaryServer(t *testing.T) {
 	assert.NotNil(t, chain0)
 
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		log.Info("ctx:", ctx)
+		log.Info("req:", req)
 		return "response", nil
 	}
 	resp, err := chain0(context.Background(), "request", nil, handler)
@@ -1030,6 +1032,8 @@ func TestChainUnaryServer(t *testing.T) {
 		req interface{},
 	) (interface{}, error) {
 		// Do something
+		log.Info("ctx:", ctx)
+		log.Info("req:", req)
 		return "TestResponse", nil
 	}
 
