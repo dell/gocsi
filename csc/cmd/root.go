@@ -49,6 +49,10 @@ var (
 	activeCmd  *cobra.Command
 )
 
+var getStdout = func() io.Writer {
+	return os.Stdout
+}
+
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "csc",

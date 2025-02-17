@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/dell/gocsi/utils"
 )
 
 func (s *serviceClient) CreateVolume(
@@ -22,6 +23,10 @@ func (s *serviceClient) CreateVolume(
 	req *csi.CreateVolumeRequest, _ ...grpc.CallOption) (
 	*csi.CreateVolumeResponse, error,
 ) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock CreateVolume")
+	}
 	return s.service.CreateVolume(ctx, req)
 }
 
@@ -53,7 +58,7 @@ func (s *service) CreateVolume(
 	}
 
 	// If no capacity is specified then use 100GiB
-	capacity := gib100
+	capacity := utils.Gib100
 	if cr := req.CapacityRange; cr != nil {
 		if rb := cr.RequiredBytes; rb > 0 {
 			capacity = rb
@@ -77,6 +82,10 @@ func (s *serviceClient) DeleteVolume(
 	req *csi.DeleteVolumeRequest, _ ...grpc.CallOption) (
 	*csi.DeleteVolumeResponse, error,
 ) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock DeleteVolume")
+	}
 	return s.service.DeleteVolume(ctx, req)
 }
 
@@ -109,6 +118,10 @@ func (s *serviceClient) ControllerPublishVolume(
 	req *csi.ControllerPublishVolumeRequest, _ ...grpc.CallOption) (
 	*csi.ControllerPublishVolumeResponse, error,
 ) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock ControllerPublishVolume")
+	}
 	return s.service.ControllerPublishVolume(ctx, req)
 }
 
@@ -156,6 +169,10 @@ func (s *serviceClient) ControllerUnpublishVolume(
 	req *csi.ControllerUnpublishVolumeRequest, _ ...grpc.CallOption) (
 	*csi.ControllerUnpublishVolumeResponse, error,
 ) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock ControllerUnpublishVolume")
+	}
 	return s.service.ControllerUnpublishVolume(ctx, req)
 }
 
@@ -205,6 +222,10 @@ func (s *serviceClient) ValidateVolumeCapabilities(
 	req *csi.ValidateVolumeCapabilitiesRequest, _ ...grpc.CallOption) (
 	*csi.ValidateVolumeCapabilitiesResponse, error,
 ) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock ValidateVolumeCapabilities")
+	}
 	return s.service.ValidateVolumeCapabilities(ctx, req)
 }
 
@@ -227,6 +248,10 @@ func (s *serviceClient) ListVolumes(
 	req *csi.ListVolumesRequest, _ ...grpc.CallOption) (
 	*csi.ListVolumesResponse, error,
 ) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock ListVolumes")
+	}
 	return s.service.ListVolumes(ctx, req)
 }
 
@@ -311,6 +336,10 @@ func (s *serviceClient) GetCapacity(
 	req *csi.GetCapacityRequest, _ ...grpc.CallOption) (
 	*csi.GetCapacityResponse, error,
 ) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock GetCapacity")
+	}
 	return s.service.GetCapacity(ctx, req)
 }
 
@@ -320,7 +349,7 @@ func (s *service) GetCapacity(
 	*csi.GetCapacityResponse, error,
 ) {
 	return &csi.GetCapacityResponse{
-		AvailableCapacity: tib100,
+		AvailableCapacity: utils.Tib100,
 	}, nil
 }
 
@@ -329,6 +358,10 @@ func (s *serviceClient) ControllerGetCapabilities(
 	req *csi.ControllerGetCapabilitiesRequest, _ ...grpc.CallOption) (
 	*csi.ControllerGetCapabilitiesResponse, error,
 ) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock ControllerGetCapabilities")
+	}
 	return s.service.ControllerGetCapabilities(ctx, req)
 }
 
@@ -390,6 +423,11 @@ func (s *serviceClient) CreateSnapshot(
 	req *csi.CreateSnapshotRequest, _ ...grpc.CallOption) (
 	*csi.CreateSnapshotResponse, error,
 ) {
+	// if CTX has this key, we want to return error
+	// this allows for unit tests to force an error via ctx as needed
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock CreateSnapshot")
+	}
 	return s.service.CreateSnapshot(ctx, req)
 }
 
@@ -398,7 +436,7 @@ func (s *service) CreateSnapshot(
 	req *csi.CreateSnapshotRequest) (
 	*csi.CreateSnapshotResponse, error,
 ) {
-	snap := s.newSnapshot(req.Name, tib)
+	snap := s.newSnapshot(req.Name, utils.Tib)
 	s.snapsRWL.Lock()
 	defer s.snapsRWL.Unlock()
 	s.snaps = append(s.snaps, snap)
@@ -413,6 +451,10 @@ func (s *serviceClient) DeleteSnapshot(
 	req *csi.DeleteSnapshotRequest, _ ...grpc.CallOption) (
 	*csi.DeleteSnapshotResponse, error,
 ) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock DeleteSnapshot")
+	}
 	return s.service.DeleteSnapshot(ctx, req)
 }
 
@@ -433,6 +475,10 @@ func (s *serviceClient) ListSnapshots(
 	req *csi.ListSnapshotsRequest, _ ...grpc.CallOption) (
 	*csi.ListSnapshotsResponse, error,
 ) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock ListSnapshots")
+	}
 	return s.service.ListSnapshots(ctx, req)
 }
 
@@ -520,6 +566,10 @@ func (s *serviceClient) ControllerExpandVolume(
 	req *csi.ControllerExpandVolumeRequest, _ ...grpc.CallOption) (
 	*csi.ControllerExpandVolumeResponse, error,
 ) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock ControllerExpandVolume")
+	}
 	return s.service.ControllerExpandVolume(ctx, req)
 }
 
@@ -564,6 +614,10 @@ func (s *serviceClient) ControllerGetVolume(
 	req *csi.ControllerGetVolumeRequest, _ ...grpc.CallOption) (
 	*csi.ControllerGetVolumeResponse, error,
 ) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock ControllerGetVolume")
+	}
 	return s.service.ControllerGetVolume(ctx, req)
 }
 
