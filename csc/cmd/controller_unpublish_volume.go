@@ -42,9 +42,6 @@ USAGE
 			if err != nil {
 				return err
 			}
-			if err != nil {
-				return err
-			}
 			fmt.Println(args[i])
 		}
 
