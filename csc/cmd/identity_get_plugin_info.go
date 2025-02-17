@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -24,7 +23,7 @@ var pluginInfoCmd = &cobra.Command{
 			return err
 		}
 
-		return root.tpl.Execute(os.Stdout, rep)
+		return root.tpl.Execute(getStdout(), rep)
 	},
 }
 

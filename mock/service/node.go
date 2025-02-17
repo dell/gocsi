@@ -3,6 +3,7 @@ package service
 import (
 	"path"
 
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -10,6 +11,8 @@ import (
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 )
+
+type ContextKey string
 
 func (s *service) NodeStageVolume(
 	_ context.Context,
@@ -151,4 +154,114 @@ func (s *service) NodeExpandVolume(
 	*csi.NodeExpandVolumeResponse, error,
 ) {
 	return nil, status.Error(codes.Unimplemented, "")
+}
+
+func (s *serviceClient) NodeStageVolume(
+	ctx context.Context,
+	_ *csi.NodeStageVolumeRequest, _ ...grpc.CallOption) (
+	*csi.NodeStageVolumeResponse, error,
+) {
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock NodeStageVolume")
+	}
+
+	return &csi.NodeStageVolumeResponse{}, nil
+}
+
+func (s *serviceClient) NodeUnstageVolume(
+	ctx context.Context,
+	_ *csi.NodeUnstageVolumeRequest, _ ...grpc.CallOption) (
+	*csi.NodeUnstageVolumeResponse, error,
+) {
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock NodeUnstageVolume")
+	}
+
+	return &csi.NodeUnstageVolumeResponse{}, nil
+}
+
+func (s *serviceClient) NodePublishVolume(
+	ctx context.Context,
+	_ *csi.NodePublishVolumeRequest, _ ...grpc.CallOption) (
+	*csi.NodePublishVolumeResponse, error,
+) {
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock NodePublishVolume")
+	}
+
+	return &csi.NodePublishVolumeResponse{}, nil
+}
+
+func (s *serviceClient) NodeUnpublishVolume(
+	ctx context.Context,
+	_ *csi.NodeUnpublishVolumeRequest, _ ...grpc.CallOption) (
+	*csi.NodeUnpublishVolumeResponse, error,
+) {
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock NodeUnpublishVolume")
+	}
+
+	return &csi.NodeUnpublishVolumeResponse{}, nil
+}
+
+func (s *serviceClient) NodeGetInfo(
+	ctx context.Context,
+	_ *csi.NodeGetInfoRequest, _ ...grpc.CallOption) (
+	*csi.NodeGetInfoResponse, error,
+) {
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock NodeGetInfo")
+	}
+
+	return &csi.NodeGetInfoResponse{}, nil
+}
+
+func (s *serviceClient) NodeGetCapabilities(
+	ctx context.Context,
+	_ *csi.NodeGetCapabilitiesRequest, _ ...grpc.CallOption) (
+	*csi.NodeGetCapabilitiesResponse, error,
+) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock NodeGetCapabilities")
+	}
+
+	// send back one capability
+	nodeCapabalities := []*csi.NodeServiceCapability{
+		{
+			// Required for NodeExpandVolume
+			Type: &csi.NodeServiceCapability_Rpc{
+				Rpc: &csi.NodeServiceCapability_RPC{
+					Type: csi.NodeServiceCapability_RPC_EXPAND_VOLUME,
+				},
+			},
+		},
+	}
+
+	return &csi.NodeGetCapabilitiesResponse{Capabilities: nodeCapabalities}, nil
+}
+
+func (s *serviceClient) NodeGetVolumeStats(
+	ctx context.Context,
+	_ *csi.NodeGetVolumeStatsRequest, _ ...grpc.CallOption) (
+	*csi.NodeGetVolumeStatsResponse, error,
+) {
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock NodeGetVolumeStats")
+	}
+
+	return &csi.NodeGetVolumeStatsResponse{}, nil
+}
+
+func (s *serviceClient) NodeExpandVolume(
+	ctx context.Context,
+	_ *csi.NodeExpandVolumeRequest, _ ...grpc.CallOption) (
+	*csi.NodeExpandVolumeResponse, error,
+) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock NodeExpandVolume")
+	}
+
+	return &csi.NodeExpandVolumeResponse{}, nil
 }
