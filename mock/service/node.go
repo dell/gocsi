@@ -153,7 +153,7 @@ func (s *service) NodeExpandVolume(
 	_ *csi.NodeExpandVolumeRequest) (
 	*csi.NodeExpandVolumeResponse, error,
 ) {
-	return &csi.NodeExpandVolumeResponse{}, nil
+	return nil, status.Error(codes.Unimplemented, "")
 }
 
 func (s *serviceClient) NodeStageVolume(
