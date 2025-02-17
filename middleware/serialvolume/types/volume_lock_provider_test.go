@@ -35,6 +35,20 @@ func (ml *MyType) GetLockWithName(ctx context.Context, name string) (gosync.TryL
 	return lock, nil
 }
 
+func testInterfaceMethods(l VolumeLockerProvider, id, name string) error {
+	ctx := context.Background()
+
+	_, err := l.GetLockWithID(ctx, id)
+	if err != nil {
+		return err
+	}
+	_, err = l.GetLockWithName(ctx, name)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func TestVolumeLockerProvider(t *testing.T) {
 	myType := &MyType{}
 	err := testInterfaceMethods(myType, "testId", "testName")

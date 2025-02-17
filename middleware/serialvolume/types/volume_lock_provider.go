@@ -19,18 +19,3 @@ type VolumeLockerProvider interface {
 	// and returned.
 	GetLockWithName(ctx context.Context, name string) (gosync.TryLocker, error)
 }
-
-// Method to test the interface methods above
-func testInterfaceMethods(l VolumeLockerProvider, id, name string) error {
-	ctx := context.Background()
-
-	_, err := l.GetLockWithID(ctx, id)
-	if err != nil {
-		return err
-	}
-	_, err = l.GetLockWithName(ctx, name)
-	if err != nil {
-		return err
-	}
-	return nil
-}

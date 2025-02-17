@@ -423,7 +423,8 @@ func (s *serviceClient) CreateSnapshot(
 	req *csi.CreateSnapshotRequest, _ ...grpc.CallOption) (
 	*csi.CreateSnapshotResponse, error,
 ) {
-	// if CTX has this key, we want to return error for UT
+	// if CTX has this key, we want to return error
+	// this allows for unit tests to force an error via ctx as needed
 	if ctx.Value(ContextKey("returnError")) == "true" {
 		return nil, status.Error(codes.InvalidArgument, "Returned error from mock CreateSnapshot")
 	}
