@@ -601,7 +601,7 @@ var _ = Describe("Controller", func() {
 		Context("Normal List Snapshots Call", func() {
 			It("Should Be Valid", func() {
 				Ω(err).ShouldNot(HaveOccurred())
-				Ω(snaps).Should(BeNil())
+				Ω(snaps).ShouldNot(BeNil()) // snaps exist by default
 			})
 		})
 		Context("Create five Snapshots Then List", func() {
@@ -615,7 +615,7 @@ var _ = Describe("Controller", func() {
 			It("Should Be Valid", func() {
 				Ω(err).ShouldNot(HaveOccurred())
 				Ω(snaps).ShouldNot(BeNil())
-				Ω(snaps).Should(HaveLen(5))
+				Ω(snaps).Should(HaveLen(8))
 			})
 		})
 	})

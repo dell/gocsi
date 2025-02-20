@@ -27,6 +27,16 @@ import (
 // contains the CSI endpoint.
 const CSIEndpoint = "CSI_ENDPOINT"
 
+// Volume Sizes
+const (
+	Kib    int64 = 1024
+	Mib    int64 = Kib * 1024
+	Gib    int64 = Mib * 1024
+	Gib100 int64 = Gib * 100
+	Tib    int64 = Gib * 1024
+	Tib100 int64 = Tib * 100
+)
+
 // GetCSIEndpoint returns the network address specified by the
 // environment variable CSI_ENDPOINT.
 func GetCSIEndpoint() (network, addr string, err error) {
@@ -78,14 +88,14 @@ func ParseProtoAddr(protoAddr string) (proto string, addr string, err error) {
 	// First check to see if the file exists at the specified path.
 	// If it does then assume it's a valid file path and return it.
 	//
-	// Otherwise attempt to create the file. If the file can be created
+	// Otherwise, attempt to create the file. If the file can be created
 	// without error then remove the file and return the result a UNIX
 	// socket file path.
 	if !protoAddrGuessRX.MatchString(protoAddr) {
 
 		// If the file already exists then assume it's a valid sock
 		// file and return it.
-		if _, err := os.Stat(protoAddr); !os.IsNotExist(err) {
+		if _, err := os.Stat(protoAddr); os.IsExist(err) {
 			return "unix", protoAddr, nil
 		}
 		f, err := os.Create(filepath.Clean(protoAddr))
