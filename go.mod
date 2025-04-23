@@ -1,6 +1,6 @@
 module github.com/dell/gocsi
 
-go 1.23
+go 1.24
 
 require (
 	github.com/akutz/gosync v0.1.0
