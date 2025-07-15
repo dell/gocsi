@@ -16,7 +16,7 @@ import (
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 
-	"github.com/dell/gocsi/utils"
+	"github.com/dell/gocsi/utils/middleware"
 )
 
 // Option configures the spec validator interceptor.
@@ -366,7 +366,7 @@ func (s *interceptor) validateResponse(
 	_ string,
 	rep interface{},
 ) error {
-	if utils.IsNilResponse(rep) {
+	if middleware.IsNilResponse(rep) {
 		return status.Error(codes.Internal, "nil response")
 	}
 

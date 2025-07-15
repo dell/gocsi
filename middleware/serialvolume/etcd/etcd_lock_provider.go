@@ -14,7 +14,7 @@ import (
 	etcdsync "go.etcd.io/etcd/client/v3/concurrency"
 
 	csictx "github.com/dell/gocsi/context"
-	mwtypes "github.com/dell/gocsi/middleware/serialvolume/types"
+	mwtypes "github.com/dell/gocsi/middleware/serialvolume/lockprovider"
 )
 
 // New returns a new etcd volume lock provider.

@@ -12,6 +12,7 @@ csi-sp.log
 # The archives built from this package.
 /*.a
 /middleware/*.a
+/utils/*.a
 
 # A temporary build dir
 .build/

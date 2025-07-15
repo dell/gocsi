@@ -1,4 +1,4 @@
-package utils_test
+package csi_test
 
 import (
 	"testing"
@@ -8,11 +8,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func TestUtils(t *testing.T) {
+func TestCsiUtils(t *testing.T) {
 	log.SetLevel(log.DebugLevel)
 	log.SetOutput(GinkgoWriter)
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Utils Suite")
+	RunSpecs(t, "CSI Utils Suite")
 }
 
 // Declarations for Ginkgo DSL

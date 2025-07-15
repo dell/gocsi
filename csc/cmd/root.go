@@ -11,7 +11,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/dell/gocsi/utils"
+	utils "github.com/dell/gocsi/utils/csi"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"

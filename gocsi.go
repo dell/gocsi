@@ -27,7 +27,8 @@ import (
 	"google.golang.org/grpc"
 
 	csictx "github.com/dell/gocsi/context"
-	"github.com/dell/gocsi/utils"
+	utils "github.com/dell/gocsi/utils/csi"
+	"github.com/dell/gocsi/utils/middleware"
 )
 
 var osExit = func(code int) {
@@ -259,7 +260,7 @@ func (sp *StoragePlugin) Serve(ctx context.Context, lis net.Listener) error {
 		// Add the interceptors to the server if any are configured.
 		if i := sp.Interceptors; len(i) > 0 {
 			sp.ServerOpts = append(sp.ServerOpts,
-				grpc.UnaryInterceptor(utils.ChainUnaryServer(i...)))
+				grpc.UnaryInterceptor(middleware.ChainUnaryServer(i...)))
 		}
 
 		// Initialize the gRPC server.

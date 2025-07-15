@@ -1,4 +1,4 @@
-package types
+package lockprovider
 
 import (
 	"context"
