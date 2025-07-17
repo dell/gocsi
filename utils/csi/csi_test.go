@@ -605,6 +605,10 @@ func TestIsSuccess(t *testing.T) {
 	}
 	Expect(utils.IsSuccess(&response)).To(Not(BeNil()))
 
+	// Test case: Non-RPC error
+	err := errors.New("non-RPC error")
+	Expect(utils.IsSuccess(err)).To(Equal(err))
+
 	// Test case: Successful response - GRPC OK
 	response = ErrorStruct{StatusCode: 0}
 	Expect(utils.IsSuccess(&response)).To(BeNil())
