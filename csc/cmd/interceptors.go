@@ -7,7 +7,7 @@ import (
 	"github.com/dell/gocsi/middleware/logging"
 	"github.com/dell/gocsi/middleware/requestid"
 	"github.com/dell/gocsi/middleware/specvalidator"
-	"github.com/dell/gocsi/utils"
+	"github.com/dell/gocsi/utils/middleware"
 )
 
 func getClientInterceptorsDialOpt() grpc.DialOption {
@@ -71,7 +71,7 @@ func getClientInterceptorsDialOpt() grpc.DialOption {
 	}
 
 	if len(iceptors) > 0 {
-		return grpc.WithUnaryInterceptor(utils.ChainUnaryClient(iceptors...))
+		return grpc.WithUnaryInterceptor(middleware.ChainUnaryClient(iceptors...))
 	}
 
 	return nil

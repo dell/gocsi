@@ -14,7 +14,7 @@ import (
 	"github.com/dell/gocsi/middleware/serialvolume"
 	"github.com/dell/gocsi/middleware/serialvolume/etcd"
 	"github.com/dell/gocsi/middleware/specvalidator"
-	"github.com/dell/gocsi/utils"
+	"github.com/dell/gocsi/utils/rpcs"
 )
 
 func (sp *StoragePlugin) initInterceptors(ctx context.Context) {
@@ -240,7 +240,7 @@ func (sp *StoragePlugin) getPluginInfo(
 		return handler(ctx, req)
 	}
 
-	_, service, method, err := utils.ParseMethod(info.FullMethod)
+	_, service, method, err := rpcs.ParseMethod(info.FullMethod)
 	if err != nil {
 		return nil, err
 	}

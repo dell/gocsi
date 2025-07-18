@@ -19,7 +19,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	mwtypes "github.com/dell/gocsi/middleware/serialvolume/types"
+	mwtypes "github.com/dell/gocsi/middleware/serialvolume/lockprovider"
 	"github.com/stretchr/testify/assert"
 	"go.etcd.io/etcd/client/pkg/v3/transport"
 	etcd "go.etcd.io/etcd/client/v3"

@@ -46,10 +46,10 @@ $(MIDDLEWARE_PKGS): %.a: $(wildcard %/*.go)
 middleware: $(MIDDLEWARE_PKGS)
 .PHONY: middleware
 
-UTILS_A := utils.a
-$(UTILS_A): utils/*.go
-	@go install ./$(basename $(@F))
-	go build -o "$@" ./$(basename $(@F))
+UTILS_A := $(addsuffix .a,$(filter-out %.a,$(wildcard utils/*)))
+$(UTILS_A): %.a: $(wildcard %/*.go)
+	@go install ./utils/$(basename $(@F))
+	go build -o "$@" ./utils/$(basename $(@F))
 
 GOCSI_A_PKG_DEPS := $(CONTEXT_A) $(MIDDLEWARE_PKGS) $(UTILS_A)
 
@@ -169,7 +169,9 @@ test-idempotent:
 	$(GINKGO_RUN_OPTS) -ginkgo.focus "Idempotent Create" || test "$$?" -eq "197"
 
 test-utils:
-	go test $(MOD_NAME)/utils $(GINKGO_RUN_OPTS)  || test "$$?" -eq "197"
+	go test $(MOD_NAME)/utils/csi $(GINKGO_RUN_OPTS) || test "$$?" -eq "197"; \
+	go test $(MOD_NAME)/utils/middleware || test "$$?" -eq "197"; \
+	go test $(MOD_NAME)/utils/rpcs $(GINKGO_RUN_OPTS) || test "$$?" -eq "197"; \
 
 test:
 	$(MAKE) test-utils

@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
-	"github.com/dell/gocsi/utils"
+	utils "github.com/dell/gocsi/utils/csi"
 )
 
 func (s *serviceClient) CreateVolume(

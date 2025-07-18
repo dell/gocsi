@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc"
 
 	csictx "github.com/dell/gocsi/context"
-	"github.com/dell/gocsi/utils"
+	"github.com/dell/gocsi/utils/middleware"
 )
 
 // Option configures the logging interceptor.
@@ -155,7 +155,7 @@ func (s *interceptor) handle(
 	}
 
 	// Print the response data if it is set.
-	if !utils.IsNilResponse(rep) {
+	if !middleware.IsNilResponse(rep) {
 		s.rprintReqOrRep(w, rep)
 	}
 	fmt.Fprintln(s.opts.repw, w.String())

@@ -1,10 +1,9 @@
-package utils_test
+package csi_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -12,61 +11,11 @@ import (
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/dell/gocsi/mock/service"
-	"github.com/dell/gocsi/utils"
-	log "github.com/sirupsen/logrus"
+	utils "github.com/dell/gocsi/utils/csi"
 
-	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 )
-
-var _ = Describe("ParseMethod", func() {
-	var (
-		err        error
-		version    int32
-		service    string
-		methodName string
-	)
-	BeforeEach(func() {
-		version, service, methodName, err = utils.ParseMethod(
-			CurrentGinkgoTestDescription().ComponentTexts[1])
-	})
-	It("/csi.v0.Identity/GetPluginInfo", func() {
-		Ω(err).ShouldNot(HaveOccurred())
-		Ω(version).Should(Equal(int32(0)))
-		Ω(service).Should(Equal("Identity"))
-		Ω(methodName).Should(Equal("GetPluginInfo"))
-	})
-	It("/csi.v1.Identity/GetPluginInfo", func() {
-		Ω(err).ShouldNot(HaveOccurred())
-		Ω(version).Should(Equal(int32(1)))
-		Ω(service).Should(Equal("Identity"))
-		Ω(methodName).Should(Equal("GetPluginInfo"))
-	})
-	It("/csi.v1.Node/NodePublishVolume", func() {
-		Ω(err).ShouldNot(HaveOccurred())
-		Ω(version).Should(Equal(int32(1)))
-		Ω(service).Should(Equal("Node"))
-		Ω(methodName).Should(Equal("NodePublishVolume"))
-	})
-	It("/csi.v1-rc1.Node/NodePublishVolume", func() {
-		Ω(err).Should(HaveOccurred())
-		Ω(err.Error()).Should(Equal(fmt.Sprintf("ParseMethod: invalid: %s",
-			CurrentGinkgoTestDescription().ComponentTexts[1])))
-	})
-	It("/csi.v1.Node", func() {
-		Ω(err).Should(HaveOccurred())
-		Ω(err.Error()).Should(Equal(fmt.Sprintf("ParseMethod: invalid: %s",
-			CurrentGinkgoTestDescription().ComponentTexts[1])))
-	})
-	It(fmt.Sprintf("/csi.v%d.Node/NodePublishVolume", math.MaxInt64), func() {
-		Ω(err).Should(HaveOccurred())
-		Ω(err.Error()).Should(Equal(fmt.Sprintf(
-			`ParseMethod: strconv.ParseInt: `+
-				`parsing "%d": value out of range`, math.MaxInt64)))
-	})
-})
 
 var errMissingCSIEndpoint = errors.New("missing CSI_ENDPOINT")
 
@@ -656,6 +605,10 @@ func TestIsSuccess(t *testing.T) {
 	}
 	Expect(utils.IsSuccess(&response)).To(Not(BeNil()))
 
+	// Test case: Non-RPC error
+	err := errors.New("non-RPC error")
+	Expect(utils.IsSuccess(err)).To(Equal(err))
+
 	// Test case: Successful response - GRPC OK
 	response = ErrorStruct{StatusCode: 0}
 	Expect(utils.IsSuccess(&response)).To(BeNil())
@@ -855,239 +808,4 @@ func TestIsVolumeCapabilityCompatible(t *testing.T) {
 	out, err := utils.IsVolumeCapabilityCompatible(a, b)
 	Ω(out).Should(BeTrue())
 	Ω(err).Should(BeNil())
-}
-
-func TestChainUnaryClient(t *testing.T) {
-	// Test case: Empty interceptors
-	var interceptors []grpc.UnaryClientInterceptor
-	chain0 := utils.ChainUnaryClient(interceptors...)
-	assert.NotNil(t, chain0)
-
-	// Test case: Invoking the non-interceptor chain
-	ctx := context.Background()
-	method := "TestMethod"
-	req := "TestRequest"
-	rep := "TestReply"
-	cc := &grpc.ClientConn{}
-	var opts []grpc.CallOption
-	invoker := func(
-		ctx context.Context,
-		method string,
-		req, rep interface{},
-		cc *grpc.ClientConn,
-		opts ...grpc.CallOption,
-	) error {
-		// Do something
-		log.Info("ctx:", ctx)
-		log.Info("req:", req)
-		log.Info("rep:", rep)
-		log.Info("cc:", cc)
-		log.Info("opts:", opts)
-		log.Info("method:", method)
-		return nil
-	}
-	err := chain0(ctx, method, req, rep, cc, invoker, opts...)
-	assert.NoError(t, err)
-
-	// Test case: Single interceptor
-	interceptors = []grpc.UnaryClientInterceptor{
-		func(
-			ctx context.Context,
-			method string,
-			req, rep interface{},
-			cc *grpc.ClientConn,
-			invoker grpc.UnaryInvoker,
-			opts ...grpc.CallOption,
-		) error {
-			// Do something
-			return invoker(ctx, method, req, rep, cc, opts...)
-		},
-	}
-	chain := utils.ChainUnaryClient(interceptors...)
-	assert.NotNil(t, chain)
-
-	// Test case: Multiple interceptors
-	interceptors = []grpc.UnaryClientInterceptor{
-		func(
-			ctx context.Context,
-			method string,
-			req, rep interface{},
-			cc *grpc.ClientConn,
-			invoker grpc.UnaryInvoker,
-			opts ...grpc.CallOption,
-		) error {
-			// Do something
-			return invoker(ctx, method, req, rep, cc, opts...)
-		},
-		func(
-			ctx context.Context,
-			method string,
-			req, rep interface{},
-			cc *grpc.ClientConn,
-			invoker grpc.UnaryInvoker,
-			opts ...grpc.CallOption,
-		) error {
-			// Do something else
-			return invoker(ctx, method, req, rep, cc, opts...)
-		},
-	}
-	chainN := utils.ChainUnaryClient(interceptors...)
-	assert.NotNil(t, chainN)
-
-	// Test case: Invoking the multi-interceptor chain
-	ctx = context.Background()
-	method = "TestMethod"
-	req = "TestRequest"
-	rep = "TestReply"
-	cc = &grpc.ClientConn{}
-	opts = []grpc.CallOption{}
-	invoker = func(
-		ctx context.Context,
-		method string,
-		req, rep interface{},
-		cc *grpc.ClientConn,
-		opts ...grpc.CallOption,
-	) error {
-		log.Info("ctx:", ctx)
-		log.Info("req:", req)
-		log.Info("rep:", rep)
-		log.Info("cc:", cc)
-		log.Info("opts:", opts)
-		log.Info("method:", method)
-		return nil
-	}
-	err = chainN(ctx, method, req, rep, cc, invoker, opts...)
-	assert.NoError(t, err)
-}
-
-func TestChainUnaryServer(t *testing.T) {
-	// Test case: Empty interceptors
-	var interceptors []grpc.UnaryServerInterceptor
-	chain0 := utils.ChainUnaryServer(interceptors...)
-	assert.NotNil(t, chain0)
-
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		log.Info("ctx:", ctx)
-		log.Info("req:", req)
-		return "response", nil
-	}
-	resp, err := chain0(context.Background(), "request", nil, handler)
-	assert.NoError(t, err)
-	assert.Equal(t, "response", resp)
-
-	// Test case: Single interceptor
-	interceptors = []grpc.UnaryServerInterceptor{
-		func(
-			ctx context.Context,
-			req interface{},
-			info *grpc.UnaryServerInfo,
-			handler grpc.UnaryHandler,
-		) (interface{}, error) {
-			// Do something
-			log.Info("ctx:", ctx)
-			log.Info("req:", req)
-			log.Info("info:", info)
-			return handler(ctx, req)
-		},
-	}
-	chain := utils.ChainUnaryServer(interceptors...)
-	assert.NotNil(t, chain)
-
-	// Test case: Multiple interceptors
-	interceptors = []grpc.UnaryServerInterceptor{
-		func(
-			ctx context.Context,
-			req interface{},
-			info *grpc.UnaryServerInfo,
-			handler grpc.UnaryHandler,
-		) (interface{}, error) {
-			// Do something
-			log.Info("ctx:", ctx)
-			log.Info("req:", req)
-			log.Info("info:", info)
-			return handler(ctx, req)
-		},
-		func(
-			ctx context.Context,
-			req interface{},
-			info *grpc.UnaryServerInfo,
-			handler grpc.UnaryHandler,
-		) (interface{}, error) {
-			// Do something else
-			log.Info("ctx:", ctx)
-			log.Info("req:", req)
-			log.Info("info:", info)
-			return handler(ctx, req)
-		},
-	}
-	chainN := utils.ChainUnaryServer(interceptors...)
-	assert.NotNil(t, chainN)
-
-	// Test case: Invoking the chain
-	ctx := context.Background()
-	req := "TestRequest"
-	info := &grpc.UnaryServerInfo{}
-	handler = func(
-		ctx context.Context,
-		req interface{},
-	) (interface{}, error) {
-		// Do something
-		log.Info("ctx:", ctx)
-		log.Info("req:", req)
-		return "TestResponse", nil
-	}
-
-	rep, err := chainN(ctx, req, info, handler)
-	assert.NoError(t, err)
-	assert.Equal(t, "TestResponse", rep)
-}
-
-func TestIsNilResponse(t *testing.T) {
-	tests := []struct {
-		name string
-		rep  interface{}
-		want bool
-	}{
-		{
-			name: "Nil Response",
-			rep:  nil,
-			want: true,
-		},
-		{
-			name: "Non-Nil Response",
-			rep:  &csi.CreateVolumeResponse{},
-			want: false,
-		},
-		{
-			name: "Nil Response Inside Interface",
-			rep: func() interface{} {
-				var rep *csi.CreateVolumeResponse
-				return rep
-			}(),
-			want: true,
-		},
-		{
-			name: "Non-Nil Response Inside Interface",
-			rep: func() interface{} {
-				rep := &csi.CreateVolumeResponse{}
-				return rep
-			}(),
-			want: false,
-		},
-		{
-			name: "Non-Response Type Inside Interface",
-			rep: func() interface{} {
-				var rep int
-				return rep
-			}(),
-			want: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := utils.IsNilResponse(tt.rep); got != tt.want {
-				t.Errorf("IsNilResponse() = %v, want %v", got, tt.want)
-			}
-		})
-	}
 }
