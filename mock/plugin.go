@@ -17,7 +17,6 @@
  */
 
 //go:build linux && plugin
-// +build linux,plugin
 
 package main
 
