@@ -1,3 +1,5 @@
+//go:build linux && plugin
+
 /*
  *
  * Copyright © 2021-2024 Dell Inc. or its subsidiaries. All Rights Reserved.
@@ -16,13 +18,11 @@
  *
  */
 
-//go:build linux && plugin
-
 package main
 
-import "C"
-
 import (
+	"C"
+
 	"github.com/dell/gocsi/mock/provider"
 	"github.com/dell/gocsi/mock/service"
 )
