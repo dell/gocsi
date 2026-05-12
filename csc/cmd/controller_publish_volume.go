@@ -64,7 +64,7 @@ USAGE
 			// Set the volume ID for the current request.
 			req.VolumeId = args[i]
 
-			log.WithField("request", req).Debug("publishing volume")
+			log.WithField("request", &req).Debug("publishing volume")
 			rep, err := controller.client.ControllerPublishVolume(ctx, &req)
 			if err != nil {
 				return err

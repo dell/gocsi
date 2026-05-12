@@ -70,7 +70,7 @@ USAGE
 			// Set the volume name for the current request.
 			req.VolumeId = args[i]
 
-			log.WithField("request", req).Debug("expanding volume")
+			log.WithField("request", &req).Debug("expanding volume")
 			rep, err := controller.client.ControllerExpandVolume(ctx, &req)
 			if err != nil {
 				return err

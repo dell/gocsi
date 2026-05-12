@@ -27,9 +27,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/dell/gocsi/mock/service"
 	utils "github.com/dell/gocsi/utils/csi"
+	"github.com/container-storage-interface/spec/lib/go/csi"
 
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
@@ -276,8 +276,8 @@ var _ = Describe("ParseMap", func() {
 
 var _ = Describe("CompareVolume", func() {
 	It("a == b", func() {
-		a := csi.Volume{VolumeId: "0"}
-		b := csi.Volume{VolumeId: "0"}
+		a := &csi.Volume{VolumeId: "0"}
+		b := &csi.Volume{VolumeId: "0"}
 		Ω(utils.CompareVolume(a, b)).Should(Equal(0))
 		a.CapacityBytes = 1
 		b.CapacityBytes = 1
@@ -287,8 +287,8 @@ var _ = Describe("CompareVolume", func() {
 		Ω(utils.CompareVolume(a, b)).Should(Equal(0))
 	})
 	It("a > b", func() {
-		a := csi.Volume{VolumeId: "0"}
-		b := csi.Volume{}
+		a := &csi.Volume{VolumeId: "0"}
+		b := &csi.Volume{}
 		Ω(utils.CompareVolume(a, b)).Should(Equal(1))
 		b.VolumeId = "0"
 		Ω(utils.CompareVolume(a, b)).Should(Equal(0))
@@ -302,8 +302,8 @@ var _ = Describe("CompareVolume", func() {
 		Ω(utils.CompareVolume(a, b)).Should(Equal(0))
 	})
 	It("a < b", func() {
-		b := csi.Volume{VolumeId: "0"}
-		a := csi.Volume{}
+		b := &csi.Volume{VolumeId: "0"}
+		a := &csi.Volume{}
 		Ω(utils.CompareVolume(a, b)).Should(Equal(-1))
 		a.VolumeId = "0"
 		Ω(utils.CompareVolume(a, b)).Should(Equal(0))
@@ -320,8 +320,8 @@ var _ = Describe("CompareVolume", func() {
 		// volume IDs must be equal, capacityBytes must be equal,
 		// length of volume contexts must be equal, and then, finally,
 		// the volume context for one key-value pair in B must be larger
-		b := csi.Volume{VolumeId: "0"}
-		a := csi.Volume{VolumeId: "0"}
+		b := &csi.Volume{VolumeId: "0"}
+		a := &csi.Volume{VolumeId: "0"}
 		a.VolumeContext = map[string]string{"key1": "1"}
 		b.VolumeContext = map[string]string{"key1": "2"}
 		Ω(utils.CompareVolume(a, b)).Should(Equal(-1))
@@ -536,9 +536,9 @@ func TestPageVolumes(t *testing.T) {
 	req := csi.ListVolumesRequest{}
 
 	// Call the PageVolumes function
-	cvol, cerr := utils.PageVolumes(ctx, svc, req)
+	cvol, cerr := utils.PageVolumes(ctx, svc, &req)
 	var err error
-	vols := []csi.Volume{}
+	vols := []*csi.Volume{}
 	for {
 		select {
 		case v, ok := <-cvol:
@@ -574,8 +574,8 @@ func TestPageSnapshots(t *testing.T) {
 	req := csi.ListSnapshotsRequest{}
 
 	// Call the PageSnapshots function
-	csnap, cerr := utils.PageSnapshots(ctx, svc, req)
-	snaps := []csi.Snapshot{}
+	csnap, cerr := utils.PageSnapshots(ctx, svc, &req)
+	snaps := []*csi.Snapshot{}
 	for {
 		select {
 		case v, ok := <-csnap:

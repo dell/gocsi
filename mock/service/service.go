@@ -1,6 +1,6 @@
 /*
  *
- * Copyright © 2021-2024 Dell Inc. or its subsidiaries. All Rights Reserved.
+ * Copyright © 2021-2026 Dell Inc. or its subsidiaries. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/container-storage-interface/spec/lib/go/csi"
 	utils "github.com/dell/gocsi/utils/csi"
+	"github.com/container-storage-interface/spec/lib/go/csi"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -46,25 +46,34 @@ var Manifest = map[string]string{
 // Service is the CSI Mock service provider.
 type MockServer interface {
 	csi.ControllerServer
+	csi.GroupControllerServer
 	csi.IdentityServer
 	csi.NodeServer
 }
 
 type MockClient interface {
 	csi.ControllerClient
+	csi.GroupControllerClient
 	csi.NodeClient
 	csi.IdentityClient
 }
 
 type service struct {
+	csi.UnimplementedControllerServer
+	csi.UnimplementedGroupControllerServer
+	csi.UnimplementedIdentityServer
+	csi.UnimplementedNodeServer
+
 	sync.Mutex
 	nodeID   string
-	vols     []csi.Volume
-	snaps    []csi.Snapshot
+	vols     []*csi.Volume
+	snaps    []*csi.Snapshot
 	volsRWL  sync.RWMutex
 	snapsRWL sync.RWMutex
 	volsNID  uint64
-	snapsNID uint64
+
+	groupSnaps    []*csi.VolumeGroupSnapshot
+	groupSnapsRWL sync.RWMutex
 }
 
 type serviceClient struct {
@@ -76,17 +85,20 @@ func NewServer() MockServer {
 	s := &service{nodeID: Name}
 
 	// add some mock volumes to start with
-	s.vols = []csi.Volume{
-		s.newVolume("Mock Volume 1", utils.Gib100),
-		s.newVolume("Mock Volume 2", utils.Gib100),
-		s.newVolume("Mock Volume 3", utils.Gib100),
-	}
+	vol1 := s.newVolume("Mock Volume 1", utils.Gib100)
+	vol2 := s.newVolume("Mock Volume 2", utils.Gib100)
+	vol3 := s.newVolume("Mock Volume 3", utils.Gib100)
+	s.vols = []*csi.Volume{&vol1, &vol2, &vol3}
 
 	// add some mock snapshots to start with, too
-	s.snaps = []csi.Snapshot{
-		s.newSnapshot("Mock Snapshot 1", utils.Gib100),
-		s.newSnapshot("Mock Snapshot 2", utils.Gib100),
-		s.newSnapshot("Mock Snapshot 3", utils.Gib100),
+	snap1 := s.newSnapshot("Mock Snapshot 1", utils.Gib100)
+	snap2 := s.newSnapshot("Mock Snapshot 2", utils.Gib100)
+	snap3 := s.newSnapshot("Mock Snapshot 3", utils.Gib100)
+	s.snaps = []*csi.Snapshot{&snap1, &snap2, &snap3}
+
+	mockGroupSnap := s.newGroupSnapshot("Mock Group Snapshot 1", []string{"1", "2"})
+	s.groupSnaps = []*csi.VolumeGroupSnapshot{
+		&mockGroupSnap,
 	}
 	return s
 }
@@ -117,16 +129,16 @@ func (s *service) newSnapshot(_ string, size int64) csi.Snapshot {
 	}
 }
 
-func (s *service) findVol(k, v string) (volIdx int, volInfo csi.Volume) {
+func (s *service) findVol(k, v string) (volIdx int, volInfo *csi.Volume) {
 	s.volsRWL.RLock()
 	defer s.volsRWL.RUnlock()
 	return s.findVolNoLock(k, v)
 }
 
-func (s *service) findVolNoLock(k, v string) (volIdx int, volInfo csi.Volume) {
+func (s *service) findVolNoLock(k, v string) (volIdx int, volInfo *csi.Volume) {
 	volIdx = -1
 
-	for i, vi := range s.vols {
+	for i, vi := range s.vols { //nolint:govet
 		switch k {
 		case "id":
 			if strings.EqualFold(v, vi.VolumeId) {
@@ -139,11 +151,11 @@ func (s *service) findVolNoLock(k, v string) (volIdx int, volInfo csi.Volume) {
 		}
 	}
 
-	return
+	return volIdx, volInfo
 }
 
 func (s *service) findVolByName(
 	_ context.Context, name string,
-) (int, csi.Volume) {
+) (int, *csi.Volume) {
 	return s.findVol("name", name)
 }

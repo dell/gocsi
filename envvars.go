@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/container-storage-interface/spec/lib/go/csi"
 	log "github.com/sirupsen/logrus"
 
 	csictx "github.com/dell/gocsi/context"
@@ -327,8 +328,6 @@ func (sp *StoragePlugin) initEnvVars(ctx context.Context) {
 			_ = csictx.Setenv(ctx, EnvVarRepLogging, "true")
 		}
 	}
-
-	return
 }
 
 func (sp *StoragePlugin) initPluginInfo(ctx context.Context) {
@@ -339,7 +338,9 @@ func (sp *StoragePlugin) initPluginInfo(ctx context.Context) {
 	info := strings.SplitN(szInfo, ",", 3)
 	fields := map[string]interface{}{}
 	if len(info) > 0 {
-		sp.pluginInfo.Name = strings.TrimSpace(info[0])
+		sp.pluginInfo = &csi.GetPluginInfoResponse{
+			Name: strings.TrimSpace(info[0]),
+		}
 		fields["name"] = sp.pluginInfo.Name
 	}
 	if len(info) > 1 {

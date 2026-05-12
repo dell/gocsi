@@ -1,6 +1,6 @@
 /*
  *
- * Copyright © 2021-2024 Dell Inc. or its subsidiaries. All Rights Reserved.
+ * Copyright © 2021-2026 Dell Inc. or its subsidiaries. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,10 +112,10 @@ func ParseProtoAddr(protoAddr string) (proto string, addr string, err error) {
 	if !protoAddrGuessRX.MatchString(protoAddr) {
 		// If the file already exists then assume it's a valid sock
 		// file and return it.
-		if _, err := os.Stat(protoAddr); !os.IsNotExist(err) {
+		if _, err := os.Stat(protoAddr); !os.IsNotExist(err) { // #nosec G703
 			return "unix", protoAddr, nil
 		}
-		f, err := os.Create(filepath.Clean(protoAddr))
+		f, err := os.Create(filepath.Clean(protoAddr)) // #nosec G703
 		if err != nil {
 			return "", "", fmt.Errorf(
 				"invalid implied sock file: %s: %v", protoAddr, err)
@@ -124,7 +124,7 @@ func ParseProtoAddr(protoAddr string) (proto string, addr string, err error) {
 			return "", "", fmt.Errorf(
 				"failed to verify network address as sock file: %s", protoAddr)
 		}
-		if err := os.RemoveAll(protoAddr); err != nil {
+		if err := os.RemoveAll(protoAddr); err != nil { // #nosec G703
 			return "", "", fmt.Errorf(
 				"failed to remove verified sock file: %s", protoAddr)
 		}
@@ -327,11 +327,11 @@ func NewBlockCapability(
 func PageVolumes(
 	ctx context.Context,
 	client csi.ControllerClient,
-	req csi.ListVolumesRequest,
+	req *csi.ListVolumesRequest,
 	opts ...grpc.CallOption,
-) (<-chan csi.Volume, <-chan error) {
+) (<-chan *csi.Volume, <-chan error) {
 	var (
-		cvol = make(chan csi.Volume)
+		cvol = make(chan *csi.Volume)
 		cerr = make(chan error)
 	)
 
@@ -357,14 +357,14 @@ func PageVolumes(
 			log.WithField("pages", pages).Debug("PageAllVolumes: exit")
 		}()
 
-		sendVolumes := func(res csi.ListVolumesResponse) {
+		sendVolumes := func(res *csi.ListVolumesResponse) {
 			// Loop over the volume entries until they're all gone
 			// or the context is cancelled.
 			var i int
 			for i = 0; i < len(res.Entries) && ctx.Err() == nil; i++ {
 
 				// Send the volume over the channel.
-				cvol <- *res.Entries[i].Volume
+				cvol <- res.Entries[i].Volume
 
 				// Let the wait group know that this worker has completed
 				// its task.
@@ -389,7 +389,7 @@ func PageVolumes(
 			wg.Add(1)
 			defer wg.Done()
 
-			res, err := client.ListVolumes(ctx, &req, opts...)
+			res, err := client.ListVolumes(ctx, req, opts...)
 			if err != nil {
 				cerr <- err
 
@@ -404,7 +404,7 @@ func PageVolumes(
 			wg.Add(len(res.Entries))
 
 			// Process the retrieved volumes.
-			go sendVolumes(*res)
+			go sendVolumes(res)
 
 			// Set the request's starting token to the response's
 			// next token.
@@ -414,13 +414,7 @@ func PageVolumes(
 
 		// List volumes until there are no more volumes or the context
 		// is cancelled.
-		for {
-			if ctx.Err() != nil {
-				break
-			}
-			if !listVolumes() {
-				break
-			}
+		for ctx.Err() == nil && listVolumes() {
 			pages++ // TODO: What increments a page? I have tried with 10,000 mock volumes and still no paging happens.
 		}
 	}()
@@ -433,11 +427,11 @@ func PageVolumes(
 func PageSnapshots(
 	ctx context.Context,
 	client csi.ControllerClient,
-	req csi.ListSnapshotsRequest,
+	req *csi.ListSnapshotsRequest,
 	opts ...grpc.CallOption,
-) (<-chan csi.Snapshot, <-chan error) {
+) (<-chan *csi.Snapshot, <-chan error) {
 	var (
-		csnap = make(chan csi.Snapshot)
+		csnap = make(chan *csi.Snapshot)
 		cerr  = make(chan error)
 	)
 
@@ -463,14 +457,14 @@ func PageSnapshots(
 			log.WithField("pages", pages).Debug("PageAllSnapshots: exit")
 		}()
 
-		sendSnapshots := func(res csi.ListSnapshotsResponse) {
+		sendSnapshots := func(res *csi.ListSnapshotsResponse) {
 			// Loop over the snaphsot entries until they're all gone
 			// or the context is cancelled.
 			var i int
 			for i = 0; i < len(res.Entries) && ctx.Err() == nil; i++ {
 
 				// Send the snaphsot over the channel.
-				csnap <- *res.Entries[i].Snapshot
+				csnap <- res.Entries[i].Snapshot
 
 				// Let the wait group know that this worker has completed
 				// its task.
@@ -495,7 +489,7 @@ func PageSnapshots(
 			wg.Add(1)
 			defer wg.Done()
 
-			res, err := client.ListSnapshots(ctx, &req, opts...)
+			res, err := client.ListSnapshots(ctx, req, opts...)
 			if err != nil {
 				cerr <- err
 
@@ -510,7 +504,7 @@ func PageSnapshots(
 			wg.Add(len(res.Entries))
 
 			// Process the retrieved snaphsots.
-			go sendSnapshots(*res)
+			go sendSnapshots(res)
 
 			// Set the request's starting token to the response's
 			// next token.
@@ -520,13 +514,7 @@ func PageSnapshots(
 
 		// List snaphsots until there are no more snaphsots or the context
 		// is cancelled.
-		for {
-			if ctx.Err() != nil {
-				break
-			}
-			if !listSnapshots() {
-				break
-			}
+		for ctx.Err() == nil && listSnapshots() {
 			pages++
 		}
 	}()
@@ -662,13 +650,13 @@ func EqualVolume(a, b *csi.Volume) bool {
 	if a == nil || b == nil {
 		return false
 	}
-	return CompareVolume(*a, *b) == 0
+	return CompareVolume(a, b) == 0
 }
 
 // CompareVolume compares two csi.Volume objects and returns a
 // negative number if a < b, a positive number if a > b, and zero if
 // a == b.
-func CompareVolume(a, b csi.Volume) int {
+func CompareVolume(a, b *csi.Volume) int {
 	if a.VolumeId < b.VolumeId {
 		return -1
 	}

@@ -1,4 +1,3 @@
-
 # GoCSI
 
 The Container Storage Interface
@@ -449,5 +448,4 @@ environment variables:
     </tr>
   </tbody>
 </table>
-
 

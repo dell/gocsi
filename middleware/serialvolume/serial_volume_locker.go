@@ -25,7 +25,6 @@ import (
 
 	"github.com/akutz/gosync"
 	"github.com/container-storage-interface/spec/lib/go/csi"
-	xctx "golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -93,7 +92,7 @@ type interceptor struct {
 }
 
 func (i *interceptor) handle(
-	ctx xctx.Context,
+	ctx context.Context,
 	req interface{},
 	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler,

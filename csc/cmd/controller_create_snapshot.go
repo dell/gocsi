@@ -65,7 +65,7 @@ CREATING MULTIPLE SNAPSHOTS
 				return fmt.Errorf("--source-volume MUST be provided")
 			}
 
-			log.WithField("request", req).Debug("creating snapshot")
+			log.WithField("request", &req).Debug("creating snapshot")
 			rep, err := controller.client.CreateSnapshot(ctx, &req)
 			if err != nil {
 				return err

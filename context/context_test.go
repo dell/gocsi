@@ -16,7 +16,7 @@
  *
  */
 
-package context
+package csictx
 
 import (
 	"context"

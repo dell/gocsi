@@ -22,8 +22,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/dell/gocsi/utils/middleware"
+	"github.com/container-storage-interface/spec/lib/go/csi"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/stretchr/testify/assert"

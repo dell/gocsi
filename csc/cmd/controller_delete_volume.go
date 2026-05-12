@@ -50,7 +50,7 @@ USAGE
 			// Set the volume ID for the current request.
 			req.VolumeId = args[i]
 
-			log.WithField("request", req).Debug("deleting volume")
+			log.WithField("request", &req).Debug("deleting volume")
 			_, err := controller.client.DeleteVolume(ctx, &req)
 			if err != nil {
 				return err

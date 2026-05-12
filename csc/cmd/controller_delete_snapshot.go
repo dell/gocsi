@@ -50,7 +50,7 @@ USAGE
 			// Set the snapshot ID for the current request.
 			req.SnapshotId = args[i]
 
-			log.WithField("request", req).Debug("deleting snapshot")
+			log.WithField("request", &req).Debug("deleting snapshot")
 			_, err := controller.client.DeleteSnapshot(ctx, &req)
 			if err != nil {
 				return err

@@ -19,11 +19,11 @@
 package gocsi
 
 import (
+	"context"
 	"strconv"
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	csictx "github.com/dell/gocsi/context"
@@ -235,8 +235,6 @@ func (sp *StoragePlugin) initInterceptors(ctx context.Context) {
 		sp.Interceptors = append(sp.Interceptors, serialvolume.New(opts...))
 		log.WithFields(fields).Debug("enabled serial volume access")
 	}
-
-	return
 }
 
 func (sp *StoragePlugin) injectContext(
@@ -254,7 +252,7 @@ func (sp *StoragePlugin) getPluginInfo(
 	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler,
 ) (interface{}, error) {
-	if sp.pluginInfo.Name == "" {
+	if sp.pluginInfo == nil || sp.pluginInfo.Name == "" {
 		return handler(ctx, req)
 	}
 
@@ -266,5 +264,5 @@ func (sp *StoragePlugin) getPluginInfo(
 		return handler(ctx, req)
 	}
 
-	return &sp.pluginInfo, nil
+	return sp.pluginInfo, nil
 }

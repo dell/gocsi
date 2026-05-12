@@ -63,7 +63,7 @@ var listSnapshotsCmd = &cobra.Command{
 		}
 
 		// Paging is enabled.
-		cvol, cerr := utils.PageSnapshots(ctx, controller.client, req)
+		cvol, cerr := utils.PageSnapshots(ctx, controller.client, &req)
 		for {
 			select {
 			case v, ok := <-cvol:

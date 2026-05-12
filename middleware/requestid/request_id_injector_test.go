@@ -19,13 +19,13 @@
 package requestid
 
 import (
+	"context"
 	"errors"
 	"reflect"
 	"testing"
 
 	csictx "github.com/dell/gocsi/context"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )

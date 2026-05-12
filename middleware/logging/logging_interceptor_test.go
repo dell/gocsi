@@ -24,8 +24,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/container-storage-interface/spec/lib/go/csi"
 	csictx "github.com/dell/gocsi/context"
+	"github.com/container-storage-interface/spec/lib/go/csi"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"

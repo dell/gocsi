@@ -1,6 +1,6 @@
 /*
  *
- * Copyright © 2021-2024 Dell Inc. or its subsidiaries. All Rights Reserved.
+ * Copyright © 2021-2026 Dell Inc. or its subsidiaries. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ package gocsi
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/user"
@@ -31,8 +32,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/dell/gocsi/mock/service"
+	"github.com/container-storage-interface/spec/lib/go/csi"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
@@ -59,6 +60,19 @@ func TestRun(t *testing.T) {
 
 	endpoint := fmt.Sprintf("unix://%s/csi.sock", wd)
 
+	// Use the login username, not the display name.
+	endpointUser := osUser.Username
+	if endpointUser == "" {
+		// Defensive fallback for environments with odd /etc/passwd (rare)
+		endpointUser = os.Getenv("USER")
+	}
+
+	// Prefer group *name*, but fall back to GID string if lookup fails.
+	endpointGroup := osUser.Gid
+	if grp, err := user.LookupGroupId(osUser.Gid); err == nil && grp != nil && grp.Name != "" {
+		endpointGroup = grp.Name
+	}
+
 	envVars := [][]string{
 		{EnvVarDebug, "true"},
 		{EnvVarLogLevel, "debug"},
@@ -80,8 +94,8 @@ func TestRun(t *testing.T) {
 		{EnvVarSerialVolAccessTimeout, "10s"},
 		{EnvVarSpecReqValidation, "true"},
 		{EnvVarSpecRepValidation, "true"},
-		{EnvVarEndpointUser, osUser.Name},
-		{EnvVarEndpointGroup, osUser.Gid},
+		{EnvVarEndpointUser, endpointUser},   // <-- fixed
+		{EnvVarEndpointGroup, endpointGroup}, // <-- robust handling
 		{EnvVarSerialVolAccessEtcdEndpoints, "http://127.0.0.1:2379"},
 	}
 
@@ -100,7 +114,7 @@ func TestRun(t *testing.T) {
 	}
 
 	svc := service.NewServer()
-	go Run(context.Background(), "Dell CSM Driver", "A Dell Container Storage Interface (CSI) Plugin", "", newMockStoragePluginProvider(svc, svc, svc))
+	go Run(context.Background(), "Dell CSM Driver", "A Dell Container Storage Interface (CSI) Plugin", "", newMockStoragePluginProvider(svc, svc, svc, svc))
 	time.Sleep(5 * time.Second)
 
 	if err := syscall.Kill(syscall.Getpid(), syscall.SIGINT); err != nil {
@@ -128,7 +142,7 @@ func TestRunHelp(_ *testing.T) {
 
 	svc := service.NewServer()
 	os.Args = []string{"--?"}
-	go Run(context.Background(), "Dell CSM Driver", "A Dell Container Storage Interface (CSI) Plugin", "", newMockStoragePluginProvider(svc, svc, svc))
+	go Run(context.Background(), "Dell CSM Driver", "A Dell Container Storage Interface (CSI) Plugin", "", newMockStoragePluginProvider(svc, svc, svc, svc))
 	<-calledOsExit
 }
 
@@ -148,7 +162,7 @@ func TestRunNoEndpoint(_ *testing.T) {
 	}()
 
 	svc := service.NewServer()
-	go Run(context.Background(), "Dell CSM Driver", "A Dell Container Storage Interface (CSI) Plugin", "", newMockStoragePluginProvider(svc, svc, svc))
+	go Run(context.Background(), "Dell CSM Driver", "A Dell Container Storage Interface (CSI) Plugin", "", newMockStoragePluginProvider(svc, svc, svc, svc))
 
 	<-calledOsExit
 }
@@ -172,7 +186,7 @@ func TestRunFailListener(_ *testing.T) {
 	os.Setenv(EnvVarEndpoint, "/bad/path/does/not/exist/gniro0$$")
 
 	svc := service.NewServer()
-	go Run(context.Background(), "Dell CSM Driver", "A Dell Container Storage Interface (CSI) Plugin", "", newMockStoragePluginProvider(svc, svc, svc))
+	go Run(context.Background(), "Dell CSM Driver", "A Dell Container Storage Interface (CSI) Plugin", "", newMockStoragePluginProvider(svc, svc, svc, svc))
 
 	<-calledOsExit
 }
@@ -203,7 +217,7 @@ func TestRunNoIdentityService(t *testing.T) {
 	os.Setenv(EnvVarEndpoint, endpoint)
 
 	svc := service.NewServer()
-	go Run(context.Background(), "Dell CSM Driver", "A Dell Container Storage Interface (CSI) Plugin", "", newMockStoragePluginProvider(svc, nil, svc))
+	go Run(context.Background(), "Dell CSM Driver", "A Dell Container Storage Interface (CSI) Plugin", "", newMockStoragePluginProvider(svc, svc, nil, svc))
 	<-calledOsExit
 }
 
@@ -233,14 +247,14 @@ func TestRunNoControllerOrNodeService(t *testing.T) {
 	os.Setenv(EnvVarEndpoint, endpoint)
 
 	svc := service.NewServer()
-	go Run(context.Background(), "Dell CSM Driver", "A Dell Container Storage Interface (CSI) Plugin", "", newMockStoragePluginProvider(nil, svc, nil))
+	go Run(context.Background(), "Dell CSM Driver", "A Dell Container Storage Interface (CSI) Plugin", "", newMockStoragePluginProvider(nil, svc, svc, nil))
 	<-calledOsExit
 }
 
 func TestInitEndpointOwner(t *testing.T) {
 	// Create a new StoragePlugin instance
 	svc := service.NewServer()
-	sp := newMockStoragePlugin(nil, svc, nil)
+	sp := newMockStoragePlugin(nil, nil, svc, nil)
 
 	// Create a new listener
 	lis, err := net.Listen("unix", "test.sock")
@@ -325,7 +339,7 @@ func TestInitEndpointOwner(t *testing.T) {
 func TestStop(t *testing.T) {
 	// Create a new StoragePlugin instance
 	svc := service.NewServer()
-	sp := newMockStoragePlugin(nil, svc, nil)
+	sp := newMockStoragePlugin(nil, nil, svc, nil)
 
 	// sp.stopOnce = sync.Once{}
 	// sp.server = &grpc.Server{}
@@ -347,7 +361,7 @@ func TestStop(t *testing.T) {
 
 func TestGetPluginInfo(t *testing.T) {
 	svc := service.NewServer()
-	sp := newMockStoragePlugin(nil, svc, nil)
+	sp := newMockStoragePlugin(nil, nil, svc, nil)
 
 	// Create a new listener
 	lis, err := net.Listen("unix", "test.sock")
@@ -376,13 +390,13 @@ func TestGetPluginInfo(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		pluginInfo csi.GetPluginInfoResponse
+		pluginInfo *csi.GetPluginInfoResponse
 		info       *grpc.UnaryServerInfo
 		expectErr  string
 	}{
 		{
 			name: "Test happy path",
-			pluginInfo: csi.GetPluginInfoResponse{
+			pluginInfo: &csi.GetPluginInfoResponse{
 				Name:          "my-plugin",
 				VendorVersion: "1.0.0",
 				Manifest:      map[string]string{"key": "value"},
@@ -395,7 +409,7 @@ func TestGetPluginInfo(t *testing.T) {
 		},
 		{
 			name: "Test blank name",
-			pluginInfo: csi.GetPluginInfoResponse{
+			pluginInfo: &csi.GetPluginInfoResponse{
 				Name:          "",
 				VendorVersion: "1.0.0",
 				Manifest:      map[string]string{"key": "value"},
@@ -408,7 +422,7 @@ func TestGetPluginInfo(t *testing.T) {
 		},
 		{
 			name: "Test with unparsable method name",
-			pluginInfo: csi.GetPluginInfoResponse{
+			pluginInfo: &csi.GetPluginInfoResponse{
 				Name:          "my-plugin",
 				VendorVersion: "1.0.0",
 				Manifest:      map[string]string{"key": "value"},
@@ -421,7 +435,7 @@ func TestGetPluginInfo(t *testing.T) {
 		},
 		{
 			name: "Test with wrong method",
-			pluginInfo: csi.GetPluginInfoResponse{
+			pluginInfo: &csi.GetPluginInfoResponse{
 				Name:          "my-plugin",
 				VendorVersion: "1.0.0",
 				Manifest:      map[string]string{"key": "value"},
@@ -449,11 +463,12 @@ func TestGetPluginInfo(t *testing.T) {
 
 // New returns a new Mock Storage Plug-in Provider.
 // Due to cyclic imports with the mock/provider package, the mock provider is copied here.
-func newMockStoragePluginProvider(controller csi.ControllerServer, identity csi.IdentityServer, node csi.NodeServer) StoragePluginProvider {
+func newMockStoragePluginProvider(controller csi.ControllerServer, groupController csi.GroupControllerServer, identity csi.IdentityServer, node csi.NodeServer) StoragePluginProvider {
 	return &StoragePlugin{
-		Controller: controller,
-		Identity:   identity,
-		Node:       node,
+		Controller:      controller,
+		GroupController: groupController,
+		Identity:        identity,
+		Node:            node,
 
 		// BeforeServe allows the SP to participate in the startup
 		// sequence. This function is invoked directly before the
@@ -485,11 +500,12 @@ func newMockStoragePluginProvider(controller csi.ControllerServer, identity csi.
 	}
 }
 
-func newMockStoragePlugin(controller csi.ControllerServer, identity csi.IdentityServer, node csi.NodeServer) StoragePlugin {
+func newMockStoragePlugin(controller csi.ControllerServer, groupController csi.GroupControllerServer, identity csi.IdentityServer, node csi.NodeServer) StoragePlugin {
 	return StoragePlugin{
-		Controller: controller,
-		Identity:   identity,
-		Node:       node,
+		Controller:      controller,
+		GroupController: groupController,
+		Identity:        identity,
+		Node:            node,
 
 		// BeforeServe allows the SP to participate in the startup
 		// sequence. This function is invoked directly before the
@@ -519,6 +535,102 @@ func newMockStoragePlugin(controller csi.ControllerServer, identity csi.Identity
 			EnvVarRequirePubContext + "=true",
 		},
 	}
+}
+
+func TestNewLogger(t *testing.T) {
+	tests := []struct {
+		name     string
+		writes   []string
+		expected []string
+	}{
+		{
+			name:     "single line",
+			writes:   []string{"hello world\n"},
+			expected: []string{"hello world"},
+		},
+		{
+			name:     "multiple lines in one write",
+			writes:   []string{"line1\nline2\nline3\n"},
+			expected: []string{"line1", "line2", "line3"},
+		},
+		{
+			name:     "separate writes",
+			writes:   []string{"first\n", "second\n"},
+			expected: []string{"first", "second"},
+		},
+		{
+			name:     "carriage return line feed",
+			writes:   []string{"hello\r\n"},
+			expected: []string{"hello"},
+		},
+		{
+			name:     "mixed line endings",
+			writes:   []string{"line1\nline2\r\nline3\n"},
+			expected: []string{"line1", "line2", "line3"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msgs := make(chan string, 10)
+			l := newLogger(func(msg string, _ ...interface{}) {
+				msgs <- msg
+			})
+
+			for _, w := range tt.writes {
+				n, err := l.Write([]byte(w))
+				assert.NoError(t, err)
+				assert.Equal(t, len(w), n)
+			}
+
+			for _, exp := range tt.expected {
+				select {
+				case got := <-msgs:
+					assert.Equal(t, exp, got)
+				case <-time.After(2 * time.Second):
+					t.Fatalf("timed out waiting for log message %q", exp)
+				}
+			}
+		})
+	}
+
+	t.Run("write after close returns error", func(t *testing.T) {
+		l := newLogger(func(_ string, _ ...interface{}) {})
+		l.w.(*io.PipeWriter).Close()
+
+		_, err := l.Write([]byte("should fail\n"))
+		assert.Error(t, err)
+		assert.Equal(t, io.ErrClosedPipe, err)
+	})
+
+	t.Run("non-EOF read error is logged via callback", func(t *testing.T) {
+		msgs := make(chan string, 100)
+		l := newLogger(func(msg string, _ ...interface{}) {
+			msgs <- msg
+		})
+
+		// Write a message first to confirm normal operation
+		_, err := l.Write([]byte("before error\n"))
+		assert.NoError(t, err)
+
+		select {
+		case got := <-msgs:
+			assert.Equal(t, "before error", got)
+		case <-time.After(2 * time.Second):
+			t.Fatal("timed out waiting for log message")
+		}
+
+		// Close the writer with a custom error to trigger non-EOF error handling
+		l.w.(*io.PipeWriter).CloseWithError(fmt.Errorf("test injected error"))
+
+		// The reader goroutine should report the error through the callback
+		select {
+		case got := <-msgs:
+			assert.Contains(t, got, "gocsi: logger encountered an error")
+			assert.Contains(t, got, "test injected error")
+		case <-time.After(2 * time.Second):
+			t.Fatal("timed out waiting for error log message")
+		}
+	})
 }
 
 func TestStoragePlugin_Serve(t *testing.T) {
@@ -537,11 +649,12 @@ func TestStoragePlugin_Serve(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name          string
-		controllerSvc csi.ControllerServer
-		nodeSvc       csi.NodeServer
-		mode          string
-		expectErr     string
+		name               string
+		controllerSvc      csi.ControllerServer
+		groupControllerSvc csi.GroupControllerServer
+		nodeSvc            csi.NodeServer
+		mode               string
+		expectErr          string
 	}{
 		{
 			name:          "Test missing controller service",
@@ -560,7 +673,7 @@ func TestStoragePlugin_Serve(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sp := newMockStoragePlugin(tt.controllerSvc, svc, tt.nodeSvc)
+			sp := newMockStoragePlugin(tt.controllerSvc, tt.groupControllerSvc, svc, tt.nodeSvc)
 			os.Setenv(EnvVarMode, tt.mode)
 			err := sp.Serve(ctx, lis)
 			assert.ErrorContains(t, err, tt.expectErr)

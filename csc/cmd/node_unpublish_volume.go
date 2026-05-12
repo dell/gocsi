@@ -54,7 +54,7 @@ USAGE
 			// Set the volume ID for the current request.
 			req.VolumeId = args[i]
 
-			log.WithField("request", req).Debug("mounting volume")
+			log.WithField("request", &req).Debug("mounting volume")
 			_, err := node.client.NodeUnpublishVolume(ctx, &req)
 			if err != nil {
 				return err
