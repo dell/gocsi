@@ -32,9 +32,10 @@ import (
 func New() gocsi.StoragePluginProvider {
 	svc := service.NewServer()
 	return &gocsi.StoragePlugin{
-		Controller: svc,
-		Identity:   svc,
-		Node:       svc,
+		Controller:      svc,
+		Identity:        svc,
+		GroupController: svc,
+		Node:            svc,
 
 		// BeforeServe allows the SP to participate in the startup
 		// sequence. This function is invoked directly before the

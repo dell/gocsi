@@ -58,7 +58,7 @@ USAGE
 			// Set the volume name for the current request.
 			req.VolumeId = args[i]
 
-			log.WithField("request", req).Debug("validate volume capabilities")
+			log.WithField("request", &req).Debug("validate volume capabilities")
 			rep, err := controller.client.ValidateVolumeCapabilities(ctx, &req)
 			if err != nil {
 				return err

@@ -19,6 +19,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"path"
@@ -28,12 +29,11 @@ import (
 	"google.golang.org/grpc"
 
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/container-storage-interface/spec/lib/go/csi"
 	utils "github.com/dell/gocsi/utils/csi"
+	"github.com/container-storage-interface/spec/lib/go/csi"
 )
 
 func (s *serviceClient) CreateVolume(
@@ -72,7 +72,7 @@ func (s *service) CreateVolume(
 
 	// Check to see if the volume already exists.
 	if i, v := s.findVolByName(ctx, req.Name); i >= 0 {
-		return &csi.CreateVolumeResponse{Volume: &v}, nil
+		return &csi.CreateVolumeResponse{Volume: v}, nil
 	}
 
 	// If no capacity is specified then use 100GiB
@@ -90,7 +90,7 @@ func (s *service) CreateVolume(
 	v := s.newVolume(req.Name, capacity)
 	s.volsRWL.Lock()
 	defer s.volsRWL.Unlock()
-	s.vols = append(s.vols, v)
+	s.vols = append(s.vols, &v)
 
 	return &csi.CreateVolumeResponse{Volume: &v}, nil
 }
@@ -125,7 +125,7 @@ func (s *service) DeleteVolume(
 	// leaks. The slice's elements may not be pointers, but the structs
 	// themselves have fields that are.
 	copy(s.vols[i:], s.vols[i+1:])
-	s.vols[len(s.vols)-1] = csi.Volume{}
+	s.vols[len(s.vols)-1] = nil
 	s.vols = s.vols[:len(s.vols)-1]
 	log.WithField("volumeID", req.VolumeId).Debug("mock delete volume")
 	return &csi.DeleteVolumeResponse{}, nil
@@ -281,11 +281,11 @@ func (s *service) ListVolumes(
 	// Copy the mock volumes into a new slice in order to avoid
 	// locking the service's volume slice for the duration of the
 	// ListVolumes RPC.
-	var vols []csi.Volume
+	var vols []*csi.Volume
 	func() {
 		s.volsRWL.RLock()
 		defer s.volsRWL.RUnlock()
-		vols = make([]csi.Volume, len(s.vols))
+		vols = make([]*csi.Volume, len(s.vols))
 		copy(vols, s.vols)
 	}()
 
@@ -333,7 +333,7 @@ func (s *service) ListVolumes(
 
 	for i = 0; i < len(entries); i++ {
 		entries[i] = &csi.ListVolumesResponse_Entry{
-			Volume: &vols[j],
+			Volume: vols[j],
 		}
 		j++
 	}
@@ -457,7 +457,7 @@ func (s *service) CreateSnapshot(
 	snap := s.newSnapshot(req.Name, utils.Tib)
 	s.snapsRWL.Lock()
 	defer s.snapsRWL.Unlock()
-	s.snaps = append(s.snaps, snap)
+	s.snaps = append(s.snaps, &snap)
 
 	return &csi.CreateSnapshotResponse{
 		Snapshot: &snap,
@@ -508,11 +508,11 @@ func (s *service) ListSnapshots(
 	// Copy the mock snapshots into a new slice in order to avoid
 	// locking the service's snapshot slice for the duration of the
 	// ListSnapshots RPC.
-	var snaps []csi.Snapshot
+	var snaps []*csi.Snapshot
 	func() {
 		s.snapsRWL.RLock()
 		defer s.snapsRWL.RUnlock()
-		snaps = make([]csi.Snapshot, len(s.snaps))
+		snaps = make([]*csi.Snapshot, len(s.snaps))
 		copy(snaps, s.snaps)
 	}()
 
@@ -562,7 +562,7 @@ func (s *service) ListSnapshots(
 	for i = 0; i < len(entries); i++ {
 		log.WithField("i", i).WithField("j", j).WithField("maxEntries", maxEntries).Debugf("rem: %d\n", rem)
 		entries[i] = &csi.ListSnapshotsResponse_Entry{
-			Snapshot: &snaps[j],
+			Snapshot: snaps[j],
 		}
 		j++
 	}
@@ -643,6 +643,26 @@ func (s *service) ControllerGetVolume(
 	_ context.Context,
 	_ *csi.ControllerGetVolumeRequest) (
 	*csi.ControllerGetVolumeResponse, error,
+) {
+	return nil, status.Error(codes.Unimplemented, "")
+}
+
+func (s *serviceClient) ControllerModifyVolume(
+	ctx context.Context,
+	req *csi.ControllerModifyVolumeRequest, _ ...grpc.CallOption) (
+	*csi.ControllerModifyVolumeResponse, error,
+) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock ControllerGetVolume")
+	}
+	return s.service.ControllerModifyVolume(ctx, req)
+}
+
+func (s *service) ControllerModifyVolume(
+	_ context.Context,
+	_ *csi.ControllerModifyVolumeRequest) (
+	*csi.ControllerModifyVolumeResponse, error,
 ) {
 	return nil, status.Error(codes.Unimplemented, "")
 }

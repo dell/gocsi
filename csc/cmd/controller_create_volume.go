@@ -101,7 +101,7 @@ CREATING MULTIPLE VOLUMES
 			// Set the volume name for the current request.
 			req.Name = args[i]
 
-			log.WithField("request", req).Debug("creating volume")
+			log.WithField("request", &req).Debug("creating volume")
 			rep, err := controller.client.CreateVolume(ctx, &req)
 			if err != nil {
 				return err

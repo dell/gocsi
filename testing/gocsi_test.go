@@ -22,7 +22,6 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"time"
 
 	"github.com/akutz/memconn"
 	"github.com/onsi/ginkgo"
@@ -49,13 +48,13 @@ func startMockServer(ctx context.Context) (*grpc.ClientConn, func(), error) {
 
 	clientOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDialer(func(string, time.Duration) (net.Conn, error) {
+		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
 			return memconn.Dial("memu", "csi-test")
 		}),
 	}
 
 	// Create a client for the piped connection.
-	client, err := grpc.DialContext(ctx, "", clientOpts...)
+	client, err := grpc.NewClient("", clientOpts...)
 	Ω(err).ShouldNot(HaveOccurred())
 
 	return client, func() { sp.GracefulStop(ctx) }, nil

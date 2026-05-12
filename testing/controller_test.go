@@ -101,42 +101,42 @@ var _ = Describe("Controller", func() {
 		nodeId = ""
 	})
 
-	listVolumes := func() (vols []csi.Volume, err error) {
+	listVolumes := func() (vols []*csi.Volume, err error) {
 		cvol, cerr := utils.PageVolumes(
 			ctx,
 			client,
-			csi.ListVolumesRequest{})
+			&csi.ListVolumesRequest{})
 		for {
 			select {
 			case v, ok := <-cvol:
 				if !ok {
-					return
+					return vols, err
 				}
 				vols = append(vols, v)
 			case e, ok := <-cerr:
 				if !ok {
-					return
+					return vols, err
 				}
 				err = e
 			}
 		}
 	}
 
-	listSnapshots := func() (snaps []csi.Snapshot, err error) {
+	listSnapshots := func() (snaps []*csi.Snapshot, err error) {
 		csnap, cerr := utils.PageSnapshots(
 			ctx,
 			client,
-			csi.ListSnapshotsRequest{})
+			&csi.ListSnapshotsRequest{})
 		for {
 			select {
 			case s, ok := <-csnap:
 				if !ok {
-					return
+					return snaps, err
 				}
 				snaps = append(snaps, s)
 			case e, ok := <-cerr:
 				if !ok {
-					return
+					return snaps, err
 				}
 				err = e
 			}
@@ -580,7 +580,7 @@ var _ = Describe("Controller", func() {
 	})
 
 	Describe("ListVolumes", func() {
-		var vols []csi.Volume
+		var vols []*csi.Volume
 		AfterEach(func() {
 			vols = nil
 		})
@@ -609,7 +609,7 @@ var _ = Describe("Controller", func() {
 	})
 
 	Describe("ListSnapshots", func() {
-		var snaps []csi.Snapshot
+		var snaps []*csi.Snapshot
 		AfterEach(func() {
 			snaps = nil
 		})

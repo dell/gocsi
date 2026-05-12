@@ -24,9 +24,9 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/dell/gocsi/mock/service"
 	utils "github.com/dell/gocsi/utils/csi"
+	"github.com/container-storage-interface/spec/lib/go/csi"
 )
 
 const (
@@ -60,21 +60,21 @@ var _ = Describe("Node", func() {
 		stopMock()
 	})
 
-	listVolumes := func() (vols []csi.Volume, err error) {
+	listVolumes := func() (vols []*csi.Volume, err error) {
 		cvol, cerr := utils.PageVolumes(
 			ctx,
 			csi.NewControllerClient(gclient),
-			csi.ListVolumesRequest{})
+			&csi.ListVolumesRequest{})
 		for {
 			select {
 			case v, ok := <-cvol:
 				if !ok {
-					return
+					return vols, err
 				}
 				vols = append(vols, v)
 			case e, ok := <-cerr:
 				if !ok {
-					return
+					return vols, err
 				}
 				err = e
 			}

@@ -20,6 +20,7 @@ package logging
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -27,7 +28,6 @@ import (
 	"regexp"
 	"strings"
 
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	csictx "github.com/dell/gocsi/context"
@@ -157,7 +157,7 @@ func (s *interceptor) handle(
 	rep, failed = next()
 
 	if s.opts.repw == nil {
-		return
+		return rep, failed
 	}
 
 	// Print the response method name.
@@ -178,7 +178,7 @@ func (s *interceptor) handle(
 	}
 	fmt.Fprintln(s.opts.repw, w.String())
 
-	return
+	return rep, failed
 }
 
 var emptyValRX = regexp.MustCompile(

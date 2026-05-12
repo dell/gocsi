@@ -70,7 +70,7 @@ USAGE
 		ctx, cancel := context.WithTimeout(root.ctx, root.timeout)
 		defer cancel()
 
-		log.WithField("request", req).Debug("expanding volume")
+		log.WithField("request", &req).Debug("expanding volume")
 		rep, err := node.client.NodeExpandVolume(ctx, &req)
 		if err != nil {
 			return err

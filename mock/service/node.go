@@ -19,13 +19,12 @@
 package service
 
 import (
+	"context"
 	"path"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"golang.org/x/net/context"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 )
@@ -144,10 +143,10 @@ func (s *service) NodeGetVolumeStats(
 	*csi.NodeGetVolumeStatsResponse, error,
 ) {
 	var f *csi.Volume
-	for _, v := range s.vols {
+	for _, v := range s.vols { //nolint:govet
 		if v.VolumeId == req.VolumeId {
 			/* #nosec G601 */
-			f = &v
+			f = v
 		}
 	}
 	if f == nil {

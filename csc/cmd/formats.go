@@ -44,11 +44,6 @@ const listSnapshotsFormat = `{{range $k, $s := .Entries}}` +
 	`{{end}}` + // {{range $s .Entries}}
 	`{{if .NextToken}}{{printf "token=%q\n" .NextToken}}{{end}}`
 
-// supportedVersionsFormat is the default Go template for emitting a
-// csi.GetSupportedVersionsResponse
-const supportedVersionsFormat = `{{range $v := .SupportedVersions}}` +
-	`{{printf "%d.%d.%d\n" $v.Major $v.Minor $v.Patch}}{{end}}`
-
 // pluginInfoFormat is the default Go template for emitting a
 // csi.GetPluginInfoResponse
 const pluginInfoFormat = `{{printf "%q\t%q" .Name .VendorVersion}}` +

@@ -16,7 +16,7 @@
  *
  */
 
-package context
+package csictx
 
 import (
 	"context"
@@ -32,11 +32,6 @@ import (
 const RequestIDKey = "csi.requestid"
 
 var (
-	// ctxRequestIDKey is an interface-wrapped key used to access the
-	// gRPC request ID injected into an outgoing or incoming context
-	// via the GoCSI request ID injection interceptor
-	ctxRequestIDKey = interface{}("x-csi-request-id")
-
 	// ctxOSEnviron is an interface-wrapped key used to access a string
 	// slice that contains one or more environment variables stored as
 	// KEY=VALUE.

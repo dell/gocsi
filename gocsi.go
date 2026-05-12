@@ -1,6 +1,6 @@
 /*
  *
- * Copyright © 2021-2024 Dell Inc. or its subsidiaries. All Rights Reserved.
+ * Copyright © 2021-2026 Dell Inc. or its subsidiaries. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -100,7 +100,6 @@ func Run(
 		if err := t.Execute(os.Stderr, app); err != nil {
 			log.WithError(err).Fatalln("failed emitting usage")
 		}
-		return
 	}
 
 	// Check for a help flag.
@@ -186,6 +185,9 @@ type StoragePlugin struct {
 	// Controller is the eponymous CSI service.
 	Controller csi.ControllerServer
 
+	// GroupController is the eponymous CSI service.
+	GroupController csi.GroupControllerServer
+
 	// Identity is the eponymous CSI service.
 	Identity csi.IdentityServer
 
@@ -224,7 +226,7 @@ type StoragePlugin struct {
 	server    *grpc.Server
 
 	envVars    map[string]string
-	pluginInfo csi.GetPluginInfoResponse
+	pluginInfo *csi.GetPluginInfoResponse
 }
 
 // Serve accepts incoming connections on the listener lis, creating
@@ -318,6 +320,11 @@ func (sp *StoragePlugin) Serve(ctx context.Context, lis net.Listener) error {
 			}
 			csi.RegisterControllerServer(sp.server, sp.Controller)
 			log.Info("controller service registered")
+
+			if sp.GroupController != nil {
+				csi.RegisterGroupControllerServer(sp.server, sp.GroupController)
+				log.Info("group controller service registered")
+			}
 		}
 		if mode == "" || mode == "node" {
 			if sp.Node == nil {
@@ -340,7 +347,6 @@ func (sp *StoragePlugin) Serve(ctx context.Context, lis net.Listener) error {
 
 		// Start the gRPC server.
 		err = sp.server.Serve(lis)
-		return
 	})
 	return err
 }
@@ -540,10 +546,22 @@ func newLogger(f func(msg string, args ...interface{})) *logger {
 	l := &logger{f: f}
 	r, w := io.Pipe()
 	l.w = w
+
 	go func() {
-		scan := bufio.NewScanner(r)
-		for scan.Scan() {
-			f(scan.Text())
+		defer r.Close()
+		reader := bufio.NewReader(r)
+
+		for {
+			msg, err := reader.ReadBytes('\n')
+
+			if len(msg) > 0 {
+				f(strings.TrimRight(string(msg), "\r\n"))
+			}
+			if err != nil && !errors.Is(err, io.EOF) {
+				f(fmt.Sprintf("gocsi: logger encountered an error: %v", err))
+				// reset and continue logging
+				reader.Reset(r)
+			}
 		}
 	}()
 	return l

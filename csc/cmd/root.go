@@ -62,11 +62,6 @@ var root struct {
 	withRequiresPubContext bool
 }
 
-var (
-	activeArgs []string
-	activeCmd  *cobra.Command
-)
-
 var getStdout = func() io.Writer {
 	return os.Stdout
 }
@@ -145,8 +140,8 @@ var RootCmd = &cobra.Command{
 
 		// Create the gRPC client connection.
 		opts := []grpc.DialOption{
-			grpc.WithDialer(
-				func(string, time.Duration) (net.Conn, error) {
+			grpc.WithContextDialer(
+				func(_ context.Context, addr string) (net.Conn, error) {
 					proto, addr, err := utils.ParseProtoAddr(root.endpoint)
 					log.WithFields(map[string]interface{}{
 						"proto":   proto,
@@ -170,9 +165,7 @@ var RootCmd = &cobra.Command{
 			opts = append(opts, o)
 		}
 
-		ctx, cancel := context.WithTimeout(root.ctx, root.timeout)
-		defer cancel()
-		client, err := grpc.DialContext(ctx, root.endpoint, opts...)
+		client, err := grpc.NewClient(root.endpoint, opts...)
 		if err != nil {
 			return err
 		}

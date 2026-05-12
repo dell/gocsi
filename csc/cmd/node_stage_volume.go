@@ -64,7 +64,7 @@ USAGE
 			// Set the volume ID for the current request.
 			req.VolumeId = args[i]
 
-			log.WithField("request", req).Debug("staging volume")
+			log.WithField("request", &req).Debug("staging volume")
 			_, err := node.client.NodeStageVolume(ctx, &req)
 			if err != nil {
 				return err

@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/dell/gocsi/mock/service"
+	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )

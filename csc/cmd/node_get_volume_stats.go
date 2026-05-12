@@ -52,7 +52,7 @@ USAGE
 				req.StagingTargetPath = split[2]
 			}
 
-			log.WithField("request", req).Debug("staging volume")
+			log.WithField("request", &req).Debug("staging volume")
 			rep, err := node.client.NodeGetVolumeStats(ctx, &req)
 			if err != nil {
 				return err
