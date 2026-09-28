@@ -25,9 +25,9 @@ import (
 
 	"github.com/dell/gocsi/utils/rpcs"
 
+	log "github.com/dell/csmlog"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 )
 
 func TestRpcsUtils(t *testing.T) {

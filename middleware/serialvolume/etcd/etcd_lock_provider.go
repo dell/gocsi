@@ -26,8 +26,8 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/dell/csmlog"
 	"github.com/akutz/gosync"
-	log "github.com/sirupsen/logrus"
 	etcd "go.etcd.io/etcd/client/v3"
 	etcdsync "go.etcd.io/etcd/client/v3/concurrency"
 
@@ -65,7 +65,7 @@ func New(
 		config = &cfg
 	}
 
-	log.WithFields(fields).Info("creating serial vol etcd lock provider")
+	log.WithFields(log.Fields(fields)).Info("creating serial vol etcd lock provider")
 
 	client, err := etcd.New(*config)
 	if err != nil {

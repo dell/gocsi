@@ -28,30 +28,34 @@ import (
 	"github.com/container-storage-interface/spec/lib/go/csi"
 )
 
-var deleteSnapshotCmd = &cobra.Command{
-	Use:     "delete-snapshot",
-	Aliases: []string{"ds", "delsnap"},
-	Short:   `invokes the rpc "DeleteSnapshot"`,
+var modifyVolume struct {
+	mutableParams mapOfStringArg
+}
+
+var modifyVolumeCmd = &cobra.Command{
+	Use:     "modify-volume",
+	Aliases: []string{"modify", "mod"},
+	Short:   `invokes the rpc "ControllerModifyVolume"`,
 	Example: `
 USAGE
 
-    csc controller delete-snapshot [flags] snapshot_ID [snapshot_ID...]
+    csc controller modify-volume --mutable-params key1=val1,key2=val2 VOLUME_ID [VOLUME_ID...]
 `,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(_ *cobra.Command, args []string) error {
-		req := csi.DeleteSnapshotRequest{
-			Secrets: root.secrets,
+		req := csi.ControllerModifyVolumeRequest{
+			MutableParameters: modifyVolume.mutableParams.data,
+			Secrets:           root.secrets,
 		}
 
 		for i := range args {
 			ctx, cancel := context.WithTimeout(root.ctx, root.timeout)
-			defer cancel()
 
-			// Set the snapshot ID for the current request.
-			req.SnapshotId = args[i]
+			req.VolumeId = args[i]
 
-			log.WithFields(log.Fields{"request": &req}).Debug("deleting snapshot")
-			_, err := controller.client.DeleteSnapshot(ctx, &req)
+			log.WithFields(log.Fields{"request": &req}).Debug("modifying volume")
+			_, err := controller.client.ControllerModifyVolume(ctx, &req)
+			cancel()
 			if err != nil {
 				return err
 			}
@@ -63,10 +67,18 @@ USAGE
 }
 
 func init() {
-	controllerCmd.AddCommand(deleteSnapshotCmd)
+	controllerCmd.AddCommand(modifyVolumeCmd)
+
+	modifyVolumeCmd.Flags().Var(
+		&modifyVolume.mutableParams,
+		"mutable-params",
+		`One or more key/value pairs may be specified to send with
+        the request as its MutableParameters field:
+
+            --mutable-params key1=val1,key2=val2 --mutable-params=key3=val3`)
 
 	flagWithRequiresCreds(
-		deleteSnapshotCmd.Flags(),
+		modifyVolumeCmd.Flags(),
 		&root.withRequiresCreds,
 		"")
 }

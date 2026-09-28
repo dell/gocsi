@@ -26,7 +26,7 @@ import (
 	"strconv"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/dell/csmlog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -261,7 +261,7 @@ func (s *interceptor) handle(
 			// the encoding error, validation error, and return the
 			// original response.
 			if err2 != nil {
-				log.WithFields(map[string]interface{}{
+				log.WithFields(log.Fields{
 					"encErr": err2,
 					"valErr": err,
 				}).Error("failed to encode error details; " +
@@ -357,6 +357,8 @@ func (s *interceptor) validateRequest(
 		return s.validateControllerUnpublishVolumeRequest(ctx, tobj)
 	case *csi.ValidateVolumeCapabilitiesRequest:
 		return s.validateValidateVolumeCapabilitiesRequest(ctx, tobj)
+	case *csi.GetSnapshotRequest:
+		return s.validateGetSnapshotRequest(ctx, tobj)
 	case *csi.GetCapacityRequest:
 		return s.validateGetCapacityRequest(ctx, tobj)
 		//
@@ -403,6 +405,8 @@ func (s *interceptor) validateResponse(
 		return s.validateListVolumesResponse(ctx, tobj)
 	case *csi.ControllerGetCapabilitiesResponse:
 		return s.validateControllerGetCapabilitiesResponse(ctx, tobj)
+	case *csi.GetSnapshotResponse:
+		return s.validateGetSnapshotResponse(ctx, tobj)
 	//
 	// Identity Service
 	//
@@ -864,14 +868,43 @@ func setPathLimit(defaultValue int) int {
 		if err == nil {
 			if maxPathLimit < pathLimit {
 				maxPathLimit = pathLimit
-				log.Debug("PathLimit set is less than the default value, using the default value for pathLimit: ", maxPathLimit)
+				log.Debugf("PathLimit set is less than the default value, using the default value for pathLimit: %d", maxPathLimit)
 				return maxPathLimit
 			}
-			log.Debug("PathLimit: ", maxPathLimit)
+			log.Debugf("PathLimit: %d", maxPathLimit)
 			return maxPathLimit
 		}
 		log.Errorf("Unable to convert maxPathLimit, using the default value for pathLimit: %d", pathLimit)
 	}
-	log.Debug("PathLimit: ", pathLimit)
+	log.Debugf("PathLimit: %d", pathLimit)
 	return pathLimit
+}
+
+func (s *interceptor) validateGetSnapshotRequest(
+	_ context.Context,
+	req *csi.GetSnapshotRequest,
+) error {
+	if req.SnapshotId == "" {
+		return status.Error(codes.InvalidArgument, "required: SnapshotId")
+	}
+	return nil
+}
+
+func (s *interceptor) validateGetSnapshotResponse(
+	_ context.Context,
+	rep *csi.GetSnapshotResponse,
+) error {
+	if rep.Snapshot == nil {
+		return status.Error(codes.Internal, "nil: Snapshot")
+	}
+
+	if rep.Snapshot.SnapshotId == "" {
+		return status.Error(codes.Internal, "empty: Snapshot.SnapshotId")
+	}
+
+	if rep.Snapshot.SourceVolumeId == "" {
+		return status.Error(codes.Internal, "empty: Snapshot.SourceVolumeId")
+	}
+
+	return nil
 }

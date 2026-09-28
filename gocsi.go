@@ -40,8 +40,8 @@ import (
 	"syscall"
 	"text/template"
 
+	log "github.com/dell/csmlog"
 	"github.com/container-storage-interface/spec/lib/go/csi"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
 	csictx "github.com/dell/gocsi/context"
@@ -59,26 +59,6 @@ func Run(
 	appName, appDescription, appUsage string,
 	sp StoragePluginProvider,
 ) {
-	// Check for the debug value.
-	if v, ok := csictx.LookupEnv(ctx, EnvVarDebug); ok {
-		/* #nosec G104 */
-		if ok, _ := strconv.ParseBool(v); ok {
-			_ = csictx.Setenv(ctx, EnvVarLogLevel, "debug")
-			_ = csictx.Setenv(ctx, EnvVarReqLogging, "true")
-			_ = csictx.Setenv(ctx, EnvVarRepLogging, "true")
-		}
-	}
-
-	// Adjust the log level.
-	lvl := log.InfoLevel
-	if v, ok := csictx.LookupEnv(ctx, EnvVarLogLevel); ok {
-		var err error
-		if lvl, err = log.ParseLevel(v); err != nil {
-			lvl = log.InfoLevel
-		}
-	}
-	log.SetLevel(lvl)
-
 	printUsage := func() {
 		// app is the information passed to the printUsage function
 		app := struct {
@@ -95,10 +75,10 @@ func Run(
 
 		t, err := template.New("t").Parse(usage)
 		if err != nil {
-			log.WithError(err).Fatalln("failed to parse usage template")
+			log.WithFields(log.Fields{log.FieldError: err.Error()}).Fatal("failed to parse usage template")
 		}
 		if err := t.Execute(os.Stderr, app); err != nil {
-			log.WithError(err).Fatalln("failed emitting usage")
+			log.WithFields(log.Fields{log.FieldError: err.Error()}).Fatal("failed emitting usage")
 		}
 	}
 
@@ -121,7 +101,7 @@ func Run(
 
 	l, err := utils.GetCSIEndpointListener()
 	if err != nil {
-		log.WithError(err).Info("failed to listen")
+		log.WithFields(log.Fields{log.FieldError: err.Error()}).Info("failed to listen")
 		osExit(1)
 	}
 
@@ -137,7 +117,7 @@ func Run(
 			if l.Addr().Network() == netUnix {
 				sockFile := l.Addr().String()
 				_ = os.RemoveAll(sockFile)
-				log.WithField("path", sockFile).Info("removed sock file")
+				log.WithFields(log.Fields{"path": sockFile}).Info("removed sock file")
 			}
 		})
 	}
@@ -150,7 +130,7 @@ func Run(
 
 	if err := sp.Serve(ctx, l); err != nil {
 		rmSockFile()
-		log.WithError(err).Info("grpc failed")
+		log.WithFields(log.Fields{log.FieldError: err.Error()}).Info("grpc failed")
 		osExit(1)
 	}
 }
@@ -343,7 +323,7 @@ func (sp *StoragePlugin) Serve(ctx context.Context, lis net.Listener) error {
 		endpoint := fmt.Sprintf(
 			"%s://%s",
 			lis.Addr().Network(), lis.Addr().String())
-		log.WithField("endpoint", endpoint).Info("serving")
+		log.WithFields(log.Fields{"endpoint": endpoint}).Info("serving")
 
 		// Start the gRPC server.
 		err = sp.server.Serve(lis)
@@ -398,7 +378,7 @@ func (sp *StoragePlugin) initEndpointPerms(
 	p := lis.Addr().String()
 	m := os.FileMode(u)
 
-	log.WithFields(map[string]interface{}{
+	log.WithFields(log.Fields{
 		"path": p,
 		"mode": m,
 	}).Info("chmod csi endpoint")
@@ -483,7 +463,7 @@ func (sp *StoragePlugin) initEndpointOwner(
 
 	if uid != puid || gid != pgid {
 		f := lis.Addr().String()
-		log.WithFields(map[string]interface{}{
+		log.WithFields(log.Fields{
 			"uid":  usrName,
 			"gid":  grpName,
 			"path": f,
@@ -528,7 +508,7 @@ func trapSignals(onExit func()) {
 	signal.Notify(sigc, sigs...)
 	go func() {
 		for s := range sigc {
-			log.WithField("signal", s).Info("received signal; shutting down")
+			log.WithFields(log.Fields{"signal": s}).Info("received signal; shutting down")
 			if onExit != nil {
 				onExit()
 			}

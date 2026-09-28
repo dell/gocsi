@@ -23,7 +23,7 @@ import (
 	"os"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/dell/csmlog"
 	"github.com/spf13/cobra"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
@@ -52,7 +52,7 @@ USAGE
 				req.StagingTargetPath = split[2]
 			}
 
-			log.WithField("request", &req).Debug("staging volume")
+			log.WithFields(log.Fields{"request": &req}).Debug("staging volume")
 			rep, err := node.client.NodeGetVolumeStats(ctx, &req)
 			if err != nil {
 				return err

@@ -29,8 +29,8 @@ import (
 	"text/template"
 	"time"
 
+	log "github.com/dell/csmlog"
 	utils "github.com/dell/gocsi/utils/csi"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -143,7 +143,7 @@ var RootCmd = &cobra.Command{
 			grpc.WithContextDialer(
 				func(_ context.Context, addr string) (net.Conn, error) {
 					proto, addr, err := utils.ParseProtoAddr(root.endpoint)
-					log.WithFields(map[string]interface{}{
+					log.WithFields(log.Fields{
 						"proto":   proto,
 						"addr":    addr,
 						"timeout": root.timeout,

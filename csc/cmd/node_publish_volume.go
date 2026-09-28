@@ -22,7 +22,7 @@ import (
 	"context"
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/dell/csmlog"
 	"github.com/spf13/cobra"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
@@ -69,7 +69,7 @@ USAGE
 			// Set the volume ID for the current request.
 			req.VolumeId = args[i]
 
-			log.WithField("request", &req).Debug("mounting volume")
+			log.WithFields(log.Fields{"request": &req}).Debug("mounting volume")
 			_, err := node.client.NodePublishVolume(ctx, &req)
 			if err != nil {
 				return err

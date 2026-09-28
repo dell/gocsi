@@ -155,10 +155,6 @@ AVAILABLE COMMANDS{{range .Commands}}{{if (and .IsAvailableCommand (ne .Name "he
 OPTIONS{{range localFlags}}{{printf "\n    %s\n        %s %s\n" (flagName .) .Usage (defaultValue .)}}{{end}}{{end}}{{if .HasAvailableInheritedFlags}}
 GLOBAL OPTIONS{{range inheritedFlags}}{{printf "\n    %s\n        %s %s\n" (flagName .) .Usage (defaultValue .)}}{{end}}{{end}}
 ENVIRONMENT OPTIONS
-    X_CSI_DEBUG
-        Setting X_CSI_DEBUG=true is the same as:
-            --log-level=debug --with-request-logging --with-response-logging
-
     X_CSI_SECRETS
         This environment variable may be used by RPCs to send secrets data
         along with the request.

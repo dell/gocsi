@@ -35,7 +35,7 @@ import (
 	"testing"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/dell/csmlog"
 
 	mwtypes "github.com/dell/gocsi/middleware/serialvolume/lockprovider"
 	"github.com/stretchr/testify/assert"
@@ -51,7 +51,7 @@ func TestMain(m *testing.M) {
 
 	cert, key, err := generateCertificate()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("%v", err)
 	}
 
 	// can't user defer since this func uses os.Exit
@@ -74,7 +74,7 @@ func TestMain(m *testing.M) {
 
 	e, err := startEtcd(cert, key)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("%v", err)
 	}
 	<-e.Server.ReadyNotify()
 
@@ -97,7 +97,7 @@ func TestMain(m *testing.M) {
 
 	p, err = New(context.TODO(), "/gocsi/etcd", 0, nil)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("%v", err)
 	}
 	exitCode := m.Run()
 	p.(io.Closer).Close()
@@ -180,7 +180,7 @@ func ExampleTryMutex_TryLock() {
 	// Assign a TryMutex to m1 and then lock m1.
 	m1, err := p.GetLockWithName(ctx, lockName)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("%v", err)
 		return
 	}
 	defer m1.(io.Closer).Close()
@@ -197,7 +197,7 @@ func ExampleTryMutex_TryLock() {
 	// Try for three seconds to lock m2.
 	m2, err := p.GetLockWithName(ctx, lockName)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("%v", err)
 		return
 	}
 	defer m2.(io.Closer).Close()
@@ -218,7 +218,7 @@ func ExampleTryMutex_TryLock_timeout() {
 	// Assign a TryMutex to m1 and then lock m1.
 	m1, err := p.GetLockWithName(ctx, lockName)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("%v", err)
 		return
 	}
 	defer m1.(io.Closer).Close()
@@ -228,7 +228,7 @@ func ExampleTryMutex_TryLock_timeout() {
 	// Try for three seconds to lock m2.
 	m2, err := p.GetLockWithName(ctx, lockName)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("%v", err)
 		return
 	}
 	defer m2.(io.Closer).Close()

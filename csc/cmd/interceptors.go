@@ -19,7 +19,7 @@
 package cmd
 
 import (
-	log "github.com/sirupsen/logrus"
+	log "github.com/dell/csmlog"
 	"google.golang.org/grpc"
 
 	"github.com/dell/gocsi/middleware/logging"

@@ -28,7 +28,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/dell/csmlog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -127,7 +127,7 @@ func (s *service) DeleteVolume(
 	copy(s.vols[i:], s.vols[i+1:])
 	s.vols[len(s.vols)-1] = nil
 	s.vols = s.vols[:len(s.vols)-1]
-	log.WithField("volumeID", req.VolumeId).Debug("mock delete volume")
+	log.WithFields(log.Fields{"volumeID": req.VolumeId}).Debug("mock delete volume")
 	return &csi.DeleteVolumeResponse{}, nil
 }
 
@@ -558,9 +558,9 @@ func (s *service) ListSnapshots(
 			maxEntries)
 	)
 
-	log.WithField("entries", entries).WithField("rem", rem).WithField("maxEntries", maxEntries).Debug("KEK")
+	log.WithFields(log.Fields{"entries": entries, "rem": rem, "maxEntries": maxEntries}).Debug("KEK")
 	for i = 0; i < len(entries); i++ {
-		log.WithField("i", i).WithField("j", j).WithField("maxEntries", maxEntries).Debugf("rem: %d\n", rem)
+		log.WithFields(log.Fields{"i": i, "j": j, "maxEntries": maxEntries}).Debugf("rem: %d\n", rem)
 		entries[i] = &csi.ListSnapshotsResponse_Entry{
 			Snapshot: snaps[j],
 		}
@@ -572,7 +572,7 @@ func (s *service) ListSnapshots(
 		nextToken = fmt.Sprintf("%d", n)
 	}
 
-	log.WithField("nextToken", nextToken).Debugf("Entries: %#v\n", entries)
+	log.WithFields(log.Fields{"nextToken": nextToken}).Debugf("Entries: %#v\n", entries)
 	return &csi.ListSnapshotsResponse{
 		Entries:   entries,
 		NextToken: nextToken,
@@ -625,6 +625,28 @@ func (s *service) ControllerExpandVolume(
 		CapacityBytes:         v.CapacityBytes,
 		NodeExpansionRequired: false,
 	}, nil
+}
+
+func (s *serviceClient) GetSnapshot(
+	ctx context.Context,
+	req *csi.GetSnapshotRequest, _ ...grpc.CallOption) (
+	*csi.GetSnapshotResponse, error,
+) {
+	// if CTX has this key, we want to return error for UT
+	if ctx.Value(ContextKey("returnError")) == "true" {
+		return nil, status.Error(codes.InvalidArgument, "Returned error from mock GetSnapshot")
+	}
+	return s.service.GetSnapshot(ctx, req)
+}
+
+func (s *service) GetSnapshot(
+	_ context.Context,
+	_ *csi.GetSnapshotRequest) (
+	*csi.GetSnapshotResponse, error,
+) {
+	// Intentional stub - returns Unimplemented as this is a mock service
+	// Actual GetSnapshot implementation should be provided by the driver
+	return nil, status.Error(codes.Unimplemented, "")
 }
 
 func (s *serviceClient) ControllerGetVolume(
