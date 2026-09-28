@@ -23,7 +23,7 @@ import (
 	"errors"
 	"os"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/dell/csmlog"
 	"github.com/spf13/cobra"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
@@ -101,7 +101,7 @@ CREATING MULTIPLE VOLUMES
 			// Set the volume name for the current request.
 			req.Name = args[i]
 
-			log.WithField("request", &req).Debug("creating volume")
+			log.WithFields(log.Fields{"request": &req}).Debug("creating volume")
 			rep, err := controller.client.CreateVolume(ctx, &req)
 			if err != nil {
 				return err

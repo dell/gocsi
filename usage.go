@@ -75,23 +75,6 @@ GLOBAL OPTIONS
         If no value is specified then the group owner of the file is the
         same as the group that starts the process.
 
-    X_CSI_DEBUG
-        Enabling this option is the same as:
-            X_CSI_LOG_LEVEL=debug
-            X_CSI_REQ_LOGGING=true
-            X_CSI_REP_LOGGING=true
-
-    X_CSI_LOG_LEVEL
-        The log level. Valid values include:
-           * PANIC
-           * FATAL
-           * ERROR
-           * WARN
-           * INFO
-           * DEBUG
-
-        The default value is WARN.
-
     X_CSI_PLUGIN_INFO
         The plug-in information is specified via the following
         comma-separated format:
@@ -108,17 +91,7 @@ GLOBAL OPTIONS
         Setting this environment variable will cause the program to
         bypass the SP's GetPluginInfo RPC and returns the specified
         information instead.
-
-    X_CSI_REQ_LOGGING
-        A flag that enables logging of incoming requests to STDOUT.
-
-        Enabling this option sets X_CSI_REQ_ID_INJECTION=true.
-
-    X_CSI_REP_LOGGING
-        A flag that enables logging of outgoing responses to STDOUT.
-
-        Enabling this option sets X_CSI_REQ_ID_INJECTION=true.
-
+        
     X_CSI_LOG_DISABLE_VOL_CTX
         A flag that disables the logging of the VolumeContext field.
 

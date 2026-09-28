@@ -21,9 +21,9 @@ package csi_test
 import (
 	"testing"
 
+	log "github.com/dell/csmlog"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 )
 
 func TestCsiUtils(t *testing.T) {

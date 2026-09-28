@@ -732,6 +732,21 @@ func TestControllerValidatControllerGetCapabilitiesResponse(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "Valid Response With ModifyVolume Capability",
+			resp: &csi.ControllerGetCapabilitiesResponse{
+				Capabilities: []*csi.ControllerServiceCapability{
+					{
+						Type: &csi.ControllerServiceCapability_Rpc{
+							Rpc: &csi.ControllerServiceCapability_RPC{
+								Type: csi.ControllerServiceCapability_RPC_MODIFY_VOLUME,
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "Missing Capability",
 			resp: &csi.ControllerGetCapabilitiesResponse{
 				Capabilities: []*csi.ControllerServiceCapability{},
@@ -745,6 +760,63 @@ func TestControllerValidatControllerGetCapabilitiesResponse(t *testing.T) {
 			err := interceptor.validateResponse(context.Background(), "", tt.resp)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ValidateControllerGetCapabilitiesResponse() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestValidateGetSnapshotResponse(t *testing.T) {
+	interceptor := newSpecValidator()
+
+	tests := []struct {
+		name    string
+		resp    *csi.GetSnapshotResponse
+		wantErr bool
+	}{
+		{
+			name: "Valid Response",
+			resp: &csi.GetSnapshotResponse{
+				Snapshot: &csi.Snapshot{
+					SnapshotId:     "test-snapshot-id",
+					SourceVolumeId: "test-volume-id",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Nil Snapshot",
+			resp: &csi.GetSnapshotResponse{
+				Snapshot: nil,
+			},
+			wantErr: true,
+		},
+		{
+			name: "Empty SnapshotId",
+			resp: &csi.GetSnapshotResponse{
+				Snapshot: &csi.Snapshot{
+					SnapshotId:     "",
+					SourceVolumeId: "test-volume-id",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Empty SourceVolumeId",
+			resp: &csi.GetSnapshotResponse{
+				Snapshot: &csi.Snapshot{
+					SnapshotId:     "test-snapshot-id",
+					SourceVolumeId: "",
+				},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := interceptor.validateResponse(context.Background(), "", tt.resp)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidateGetSnapshotResponse() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -1501,6 +1573,19 @@ func TestHandle(t *testing.T) {
 				WithResponseValidation(),
 			},
 			req: &csi.DeleteVolumeRequest{
+				VolumeId: "",
+			},
+			next:    handler,
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "ControllerModifyVolume request with empty GetVolumeId()",
+			opts: []Option{
+				WithRequestValidation(),
+				WithResponseValidation(),
+			},
+			req: &csi.ControllerModifyVolumeRequest{
 				VolumeId: "",
 			},
 			next:    handler,

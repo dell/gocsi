@@ -24,7 +24,7 @@ import (
 	"strings"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/dell/csmlog"
 	"github.com/spf13/pflag"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"

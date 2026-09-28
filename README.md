@@ -181,45 +181,6 @@ environment variables:
       </td>
     </tr>
     <tr>
-      <td><code>X_CSI_DEBUG</code></td>
-      <td>A <code>true</code> value is equivalent to:
-        <ul>
-          <li><code>X_CSI_LOG_LEVEL=debug</code></li>
-          <li><code>X_CSI_REQ_LOGGING=true</code></li>
-          <li><code>X_CSI_REP_LOGGING=true</code></li>
-        </ul>
-      </td>
-    </tr>
-    <tr>
-      <td><code>X_CSI_LOG_LEVEL</code></td>
-      <td>
-        <p>The log level. Valid values include:</p>
-        <ul>
-          <li><code>PANIC</code></li>
-          <li><code>FATAL</code></li>
-          <li><code>ERROR</code></li>
-          <li><code>WARN</code></li>
-          <li><code>INFO</code></li>
-          <li><code>DEBUG</code></li>
-        </ul>
-        <p>The default value is <code>WARN</code>.</p>
-      </td>
-    </tr>
-    <tr>
-      <td><code>X_CSI_REQ_LOGGING</code></td>
-      <td><p>A flag that enables logging of incoming requests to
-      <code>STDOUT</code>.</p>
-      <p>Enabling this option sets <code>X_CSI_REQ_ID_INJECTION=true</code>.</p>
-      </td>
-    </tr>
-    <tr>
-      <td><code>X_CSI_REP_LOGGING</code></td>
-      <td><p>A flag that enables logging of incoming responses to
-      <code>STDOUT</code>.</p>
-      <p>Enabling this option sets <code>X_CSI_REQ_ID_INJECTION=true</code>.</p>
-      </td>
-    </tr>
-    <tr>
       <td><code>X_CSI_LOG_DISABLE_VOL_CTX</code></td>
       <td><p>A flag that disables the logging of the VolumeContext field.</p>
       <p>Only takes effect if Request or Reply logging is enabled.</p>

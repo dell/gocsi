@@ -20,11 +20,10 @@ package gocsi
 
 import (
 	"context"
-	"strconv"
 	"strings"
 
+	log "github.com/dell/csmlog"
 	"github.com/container-storage-interface/spec/lib/go/csi"
-	log "github.com/sirupsen/logrus"
 
 	csictx "github.com/dell/gocsi/context"
 	utils "github.com/dell/gocsi/utils/csi"
@@ -55,19 +54,6 @@ const (
 	// the process.
 	EnvVarEndpointGroup = "X_CSI_ENDPOINT_GROUP"
 
-	// EnvVarDebug is the name of the environment variable used to
-	// determine whether or not debug mode is enabled.
-	//
-	// Setting this environment variable to a truthy value is the
-	// equivalent of X_CSI_LOG_LEVEL=DEBUG, X_CSI_REQ_LOGGING=true,
-	// and X_CSI_REP_LOGGING=true.
-	EnvVarDebug = "X_CSI_DEBUG"
-
-	// EnvVarLogLevel is the name of the environment variable used to
-	// specify the log level. Valid values include PANIC, FATAL, ERROR,
-	// WARN, INFO, and DEBUG.
-	EnvVarLogLevel = "X_CSI_LOG_LEVEL"
-
 	// EnvVarPluginInfo is the name of the environment variable used to
 	// specify the plug-in info in the format:
 	//
@@ -97,20 +83,6 @@ const (
 	// activated.
 	EnvVarMode = "X_CSI_MODE"
 
-	// EnvVarReqLogging is the name of the environment variable
-	// used to determine whether or not to enable request logging.
-	//
-	// Setting this environment variable to a truthy value enables
-	// request logging to STDOUT.
-	EnvVarReqLogging = "X_CSI_REQ_LOGGING"
-
-	// EnvVarRepLogging is the name of the environment variable
-	// used to determine whether or not to enable response logging.
-	//
-	// Setting this environment variable to a truthy value enables
-	// response logging to STDOUT.
-	EnvVarRepLogging = "X_CSI_REP_LOGGING"
-
 	// EnvVarLoggingDisableVolCtx is the name of the environment variable
 	// used to disable the logging of the VolumeContext field when request or
 	// response logging is enabled.
@@ -122,6 +94,22 @@ const (
 	// EnvVarReqIDInjection is the name of the environment variable
 	// used to determine whether or not to enable request ID injection.
 	EnvVarReqIDInjection = "X_CSI_REQ_ID_INJECTION"
+
+	// EnvVarDebug is the name of the environment variable used to enable
+	// debug mode. Used by CSI drivers (e.g., csi-powerflex) for debugging.
+	EnvVarDebug = "X_CSI_DEBUG"
+
+	// EnvVarReqLogging is the name of the environment variable used to enable
+	// request logging. Used by CSI drivers (e.g., csi-powerflex) for debugging.
+	EnvVarReqLogging = "X_CSI_REQ_LOGGING"
+
+	// EnvVarRepLogging is the name of the environment variable used to enable
+	// response logging. Used by CSI drivers (e.g., csi-powerflex) for debugging.
+	EnvVarRepLogging = "X_CSI_REP_LOGGING"
+
+	// EnvVarLogLevel is the name of the environment variable used to set
+	// the log level. Used by CSI drivers (e.g., csi-powerflex) for log configuration.
+	EnvVarLogLevel = "X_CSI_LOG_LEVEL"
 
 	// EnvVarSpecValidation is the name of the environment variable
 	// used to determine whether or not to enable validation of CSI
@@ -319,15 +307,6 @@ func (sp *StoragePlugin) initEnvVars(ctx context.Context) {
 		}
 		sp.envVars[key] = val
 	}
-
-	// Check for the debug value.
-	if v, ok := csictx.LookupEnv(ctx, EnvVarDebug); ok {
-		/* #nosec G104 */
-		if ok, _ := strconv.ParseBool(v); ok {
-			_ = csictx.Setenv(ctx, EnvVarReqLogging, "true")
-			_ = csictx.Setenv(ctx, EnvVarRepLogging, "true")
-		}
-	}
 }
 
 func (sp *StoragePlugin) initPluginInfo(ctx context.Context) {
@@ -353,6 +332,6 @@ func (sp *StoragePlugin) initPluginInfo(ctx context.Context) {
 	}
 
 	if len(fields) > 0 {
-		log.WithFields(fields).Debug("init plug-in info")
+		log.WithFields(log.Fields(fields)).Debug("init plug-in info")
 	}
 }

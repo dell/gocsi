@@ -22,9 +22,9 @@ import (
 	"context"
 	"testing"
 
+	log "github.com/dell/csmlog"
 	"github.com/dell/gocsi/utils/middleware"
 	"github.com/container-storage-interface/spec/lib/go/csi"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
@@ -51,12 +51,12 @@ func TestChainUnaryClient(t *testing.T) {
 		opts ...grpc.CallOption,
 	) error {
 		// Do something
-		log.Info("ctx:", ctx)
-		log.Info("req:", req)
-		log.Info("rep:", rep)
-		log.Info("cc:", cc)
-		log.Info("opts:", opts)
-		log.Info("method:", method)
+		log.Infof("ctx: %v", ctx)
+		log.Infof("req: %v", req)
+		log.Infof("rep: %v", rep)
+		log.Infof("cc: %v", cc)
+		log.Infof("opts: %v", opts)
+		log.Infof("method: %v", method)
 		return nil
 	}
 	err := chain0(ctx, method, req, rep, cc, invoker, opts...)
@@ -121,12 +121,12 @@ func TestChainUnaryClient(t *testing.T) {
 		cc *grpc.ClientConn,
 		opts ...grpc.CallOption,
 	) error {
-		log.Info("ctx:", ctx)
-		log.Info("req:", req)
-		log.Info("rep:", rep)
-		log.Info("cc:", cc)
-		log.Info("opts:", opts)
-		log.Info("method:", method)
+		log.Infof("ctx: %v", ctx)
+		log.Infof("req: %v", req)
+		log.Infof("rep: %v", rep)
+		log.Infof("cc: %v", cc)
+		log.Infof("opts: %v", opts)
+		log.Infof("method: %v", method)
 		return nil
 	}
 	err = chainN(ctx, method, req, rep, cc, invoker, opts...)
@@ -140,8 +140,8 @@ func TestChainUnaryServer(t *testing.T) {
 	assert.NotNil(t, chain0)
 
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		log.Info("ctx:", ctx)
-		log.Info("req:", req)
+		log.Infof("ctx: %v", ctx)
+		log.Infof("req: %v", req)
 		return "response", nil
 	}
 	resp, err := chain0(context.Background(), "request", nil, handler)
@@ -157,9 +157,9 @@ func TestChainUnaryServer(t *testing.T) {
 			handler grpc.UnaryHandler,
 		) (interface{}, error) {
 			// Do something
-			log.Info("ctx:", ctx)
-			log.Info("req:", req)
-			log.Info("info:", info)
+			log.Infof("ctx: %v", ctx)
+			log.Infof("req: %v", req)
+			log.Infof("info: %v", info)
 			return handler(ctx, req)
 		},
 	}
@@ -175,9 +175,9 @@ func TestChainUnaryServer(t *testing.T) {
 			handler grpc.UnaryHandler,
 		) (interface{}, error) {
 			// Do something
-			log.Info("ctx:", ctx)
-			log.Info("req:", req)
-			log.Info("info:", info)
+			log.Infof("ctx: %v", ctx)
+			log.Infof("req: %v", req)
+			log.Infof("info: %v", info)
 			return handler(ctx, req)
 		},
 		func(
@@ -187,9 +187,9 @@ func TestChainUnaryServer(t *testing.T) {
 			handler grpc.UnaryHandler,
 		) (interface{}, error) {
 			// Do something else
-			log.Info("ctx:", ctx)
-			log.Info("req:", req)
-			log.Info("info:", info)
+			log.Infof("ctx: %v", ctx)
+			log.Infof("req: %v", req)
+			log.Infof("info: %v", info)
 			return handler(ctx, req)
 		},
 	}
@@ -205,8 +205,8 @@ func TestChainUnaryServer(t *testing.T) {
 		req interface{},
 	) (interface{}, error) {
 		// Do something
-		log.Info("ctx:", ctx)
-		log.Info("req:", req)
+		log.Infof("ctx: %v", ctx)
+		log.Infof("req: %v", req)
 		return "TestResponse", nil
 	}
 

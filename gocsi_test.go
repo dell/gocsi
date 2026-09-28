@@ -32,9 +32,9 @@ import (
 	"testing"
 	"time"
 
+	log "github.com/dell/csmlog"
 	"github.com/dell/gocsi/mock/service"
 	"github.com/container-storage-interface/spec/lib/go/csi"
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )
@@ -74,8 +74,6 @@ func TestRun(t *testing.T) {
 	}
 
 	envVars := [][]string{
-		{EnvVarDebug, "true"},
-		{EnvVarLogLevel, "debug"},
 		{EnvVarEndpoint, endpoint},
 		{EnvVarEndpointPerms, "0777"},
 		{EnvVarCredsCreateVol, "true"},
@@ -378,8 +376,8 @@ func TestGetPluginInfo(t *testing.T) {
 
 	// set up handler
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		log.Info("ctx:", ctx)
-		log.Info("req:", req)
+		log.Infof("ctx: %v", ctx)
+		log.Infof("req: %v", req)
 		resp := &csi.GetPluginInfoResponse{
 			Name:          "my-plugin",
 			VendorVersion: "1.0.0",
@@ -480,7 +478,7 @@ func newMockStoragePluginProvider(controller csi.ControllerServer, groupControll
 			_ *StoragePlugin,
 			_ net.Listener,
 		) error {
-			log.WithField("service", service.Name).Debug("BeforeServe")
+			log.WithFields(log.Fields{"service": service.Name}).Debug("BeforeServe")
 			return nil
 		},
 
@@ -517,7 +515,7 @@ func newMockStoragePlugin(controller csi.ControllerServer, groupController csi.G
 			_ *StoragePlugin,
 			_ net.Listener,
 		) error {
-			log.WithField("service", service.Name).Debug("BeforeServe")
+			log.WithFields(log.Fields{"service": service.Name}).Debug("BeforeServe")
 			return nil
 		},
 

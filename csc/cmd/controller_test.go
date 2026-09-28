@@ -29,7 +29,23 @@ import (
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 )
+
+type controllerModifyVolumeClient struct {
+	service.MockClient
+}
+
+func (c controllerModifyVolumeClient) ControllerModifyVolume(
+	ctx context.Context,
+	_ *csi.ControllerModifyVolumeRequest,
+	_ ...grpc.CallOption,
+) (*csi.ControllerModifyVolumeResponse, error) {
+	if ctx.Value(service.ContextKey("returnError")) == "true" {
+		return nil, fmt.Errorf("error from mock ControllerModifyVolume")
+	}
+	return &csi.ControllerModifyVolumeResponse{}, nil
+}
 
 func setupRoot(t *testing.T, format string) {
 	root.ctx = context.Background()
@@ -99,6 +115,27 @@ func TestCreateSnapshotCmd(t *testing.T) {
 	setupRoot(t, nodeInfoFormat)
 	err = child.RunE(RootCmd, []string{"testname"})
 	assert.ErrorContains(t, err, "can't evaluate field NodeId")
+}
+
+func TestModifyVolumeCmd(t *testing.T) {
+	child := modifyVolumeCmd
+	// set up root as required
+	setupRoot(t, pluginCapsFormat)
+
+	// set up the CSI client with a mock
+	controller.client = controllerModifyVolumeClient{MockClient: service.NewClient()}
+
+	// Valid test case
+	modifyVolume.mutableParams = mapOfStringArg{data: map[string]string{"key1": "value1", "key2": "value2"}}
+	err := child.RunE(RootCmd, []string{"1"})
+	assert.NoError(t, err)
+
+	// force ControllerModifyVolume to return error
+	setupRootCtxToFailCSICalls()
+	err = child.RunE(RootCmd, []string{"1"})
+	assert.ErrorContains(t, err, "error from mock ControllerModifyVolume")
+
+	modifyVolume.mutableParams = mapOfStringArg{}
 }
 
 func TestCreateVolumeCmd(t *testing.T) {

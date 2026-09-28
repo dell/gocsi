@@ -54,7 +54,7 @@ func startMockServer(ctx context.Context) (*grpc.ClientConn, func(), error) {
 	}
 
 	// Create a client for the piped connection.
-	client, err := grpc.NewClient("", clientOpts...)
+	client, err := grpc.NewClient("passthrough:///csi-test", clientOpts...)
 	Ω(err).ShouldNot(HaveOccurred())
 
 	return client, func() { sp.GracefulStop(ctx) }, nil

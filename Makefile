@@ -81,9 +81,6 @@ $(CSI_SP_LOG): $(CSI_SP)
 	  printf "%-74s" "starting $(<F)" && printf ' ==\n' && \
 	  printf '=%.0s' $$(seq 1 80) && echo
 	CSI_ENDPOINT=$(CSI_SP_SOCK) \
-	  X_CSI_LOG_LEVEL=debug \
-	  X_CSI_REQ_LOGGING=true \
-	  X_CSI_REP_LOGGING=true \
 	  X_CSI_PLUGIN_INFO="My CSI Plug-in,0.1.0,status=online" \
 	  $< > $(CSI_SP_LOG) 2>&1 &
 	@for i in 1 2 3 4 5 6 7 8 9 10; do \

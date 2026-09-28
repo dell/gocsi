@@ -23,7 +23,7 @@ import (
 	"strconv"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/dell/csmlog"
 	"google.golang.org/grpc"
 
 	csictx "github.com/dell/gocsi/context"
@@ -40,8 +40,6 @@ func (sp *StoragePlugin) initInterceptors(ctx context.Context) {
 	log.Debug("enabled context injector")
 
 	var (
-		withReqLogging         = sp.getEnvBool(ctx, EnvVarReqLogging)
-		withRepLogging         = sp.getEnvBool(ctx, EnvVarRepLogging)
 		withDisableLogVolCtx   = sp.getEnvBool(ctx, EnvVarLoggingDisableVolCtx)
 		withSerialVol          = sp.getEnvBool(ctx, EnvVarSerialVolAccess)
 		withSpec               = sp.getEnvBool(ctx, EnvVarSpecValidation)
@@ -73,7 +71,7 @@ func (sp *StoragePlugin) initInterceptors(ctx context.Context) {
 		withSpecReq = withSpec
 		withSpecRep = withSpec
 	)
-	log.WithField("withSpec", withSpec).Debug("init req & rep validation")
+	log.WithFields(log.Fields{"withSpec": withSpec}).Debug("init req & rep validation")
 
 	// If request validation is not enabled explicitly, check to see if it
 	// should be enabled implicitly.
@@ -82,49 +80,43 @@ func (sp *StoragePlugin) initInterceptors(ctx context.Context) {
 			withStgTgtPath ||
 			withVolContext ||
 			withPubContext
-		log.WithField("withSpecReq", withSpecReq).Debug(
+		log.WithFields(log.Fields{"withSpecReq": withSpecReq}).Debug(
 			"init implicit req validation")
 	}
 
 	// Check to see if spec request or response validation are overridden.
 	if v, ok := csictx.LookupEnv(ctx, EnvVarSpecReqValidation); ok {
 		withSpecReq, _ = strconv.ParseBool(v)
-		log.WithField("withSpecReq", withSpecReq).Debug("init req validation")
+		log.WithFields(log.Fields{"withSpecReq": withSpecReq}).Debug("init req validation")
 	}
 	if v, ok := csictx.LookupEnv(ctx, EnvVarSpecRepValidation); ok {
 		withSpecRep, _ = strconv.ParseBool(v)
-		log.WithField("withSpecRep", withSpecRep).Debug("init rep validation")
+		log.WithFields(log.Fields{"withSpecRep": withSpecRep}).Debug("init rep validation")
 	}
 
 	// Configure logging.
-	if withReqLogging || withRepLogging {
-		// Automatically enable request ID injection if logging
-		// is enabled.
-		sp.Interceptors = append(sp.Interceptors,
-			requestid.NewServerRequestIDInjector())
-		log.Debug("enabled request ID injector")
+	// Automatically enable request ID injection
+	sp.Interceptors = append(sp.Interceptors,
+		requestid.NewServerRequestIDInjector())
+	log.Debug("enabled request ID injector")
 
-		var (
-			loggingOpts []logging.Option
-			w           = newLogger(log.Infof)
-		)
+	var (
+		loggingOpts []logging.Option
+		w           = newLogger(log.Infof)
+	)
 
-		if withDisableLogVolCtx {
-			loggingOpts = append(loggingOpts, logging.WithDisableLogVolumeContext())
-			log.Debug("disabled logging of VolumeContext field")
-		}
-
-		if withReqLogging {
-			loggingOpts = append(loggingOpts, logging.WithRequestLogging(w))
-			log.Debug("enabled request logging")
-		}
-		if withRepLogging {
-			loggingOpts = append(loggingOpts, logging.WithResponseLogging(w))
-			log.Debug("enabled response logging")
-		}
-		sp.Interceptors = append(sp.Interceptors,
-			logging.NewServerLogger(loggingOpts...))
+	if withDisableLogVolCtx {
+		loggingOpts = append(loggingOpts, logging.WithDisableLogVolumeContext())
+		log.Debug("disabled logging of VolumeContext field")
 	}
+
+	loggingOpts = append(loggingOpts, logging.WithRequestLogging(w))
+	log.Debug("enabled request logging")
+	loggingOpts = append(loggingOpts, logging.WithResponseLogging(w))
+	log.Debug("enabled response logging")
+
+	sp.Interceptors = append(sp.Interceptors,
+		logging.NewServerLogger(loggingOpts...))
 
 	if withSpecReq || withSpecRep {
 		var specOpts []specvalidator.Option
@@ -227,13 +219,13 @@ func (sp *StoragePlugin) initInterceptors(ctx context.Context) {
 		if csictx.Getenv(ctx, EnvVarSerialVolAccessEtcdEndpoints) != "" {
 			p, err := etcd.New(ctx, "", 0, nil)
 			if err != nil {
-				log.Fatal(err)
+				log.Fatalf("%v", err)
 			}
 			opts = append(opts, serialvolume.WithLockProvider(p))
 		}
 
 		sp.Interceptors = append(sp.Interceptors, serialvolume.New(opts...))
-		log.WithFields(fields).Debug("enabled serial volume access")
+		log.WithFields(log.Fields(fields)).Debug("enabled serial volume access")
 	}
 }
 

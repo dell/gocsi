@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"os"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/dell/csmlog"
 	"github.com/spf13/cobra"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
@@ -65,7 +65,7 @@ CREATING MULTIPLE SNAPSHOTS
 				return fmt.Errorf("--source-volume MUST be provided")
 			}
 
-			log.WithField("request", &req).Debug("creating snapshot")
+			log.WithFields(log.Fields{"request": &req}).Debug("creating snapshot")
 			rep, err := controller.client.CreateSnapshot(ctx, &req)
 			if err != nil {
 				return err

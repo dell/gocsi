@@ -92,7 +92,7 @@ func New() gocsi.StoragePluginProvider {
 			sp *gocsi.StoragePlugin,
 			lis net.Listener) error {
 
-			log.WithField("service", service.Name).Debug("BeforeServe")
+			log.WithFields(log.Fields{"service": service.Name}).Debug("BeforeServe")
 			return nil
 		},
 
@@ -367,7 +367,6 @@ cd - > /dev/null 2>&1 || exit 1
 if [ "$BUILD_RESULT" -eq 0 ]; then
   echo "  success!"
   echo '  example: CSI_ENDPOINT=csi.sock \'
-  echo '           X_CSI_LOG_LEVEL=info \'
   echo "           $SP_DIR/$SP_NAME"
   echo
   echo "  help available online at"

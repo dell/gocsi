@@ -22,7 +22,7 @@ import (
 	"context"
 	"net"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/dell/csmlog"
 
 	"github.com/dell/gocsi"
 	"github.com/dell/gocsi/mock/service"
@@ -47,7 +47,7 @@ func New() gocsi.StoragePluginProvider {
 			_ *gocsi.StoragePlugin,
 			_ net.Listener,
 		) error {
-			log.WithField("service", service.Name).Debug("BeforeServe")
+			log.WithFields(log.Fields{"service": service.Name}).Debug("BeforeServe")
 			return nil
 		},
 

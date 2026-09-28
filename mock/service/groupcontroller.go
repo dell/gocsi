@@ -21,8 +21,8 @@ import (
 	"context"
 	"strings"
 
+	log "github.com/dell/csmlog"
 	"github.com/container-storage-interface/spec/lib/go/csi"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -109,7 +109,7 @@ func (s *service) DeleteVolumeGroupSnapshot(
 	copy(s.groupSnaps[index:], s.groupSnaps[index+1:])
 	s.groupSnaps[len(s.groupSnaps)-1] = nil
 	s.groupSnaps = s.groupSnaps[:len(s.groupSnaps)-1]
-	log.WithField("volumeGroupSnapshotID", req.GroupSnapshotId).Debug("mock delete volume")
+	log.WithFields(log.Fields{"volumeGroupSnapshotID": req.GroupSnapshotId}).Debug("mock delete volume")
 
 	return &csi.DeleteVolumeGroupSnapshotResponse{}, nil
 }

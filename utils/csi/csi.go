@@ -33,7 +33,7 @@ import (
 	"strings"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/dell/csmlog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -354,7 +354,7 @@ func PageVolumes(
 			wg.Wait()
 			close(cerr)
 			close(cvol)
-			log.WithField("pages", pages).Debug("PageAllVolumes: exit")
+			log.WithFields(log.Fields{"pages": pages}).Debug("PageAllVolumes: exit")
 		}()
 
 		sendVolumes := func(res *csi.ListVolumesResponse) {
@@ -374,7 +374,7 @@ func PageVolumes(
 			// deduct the remaining number from the wait group.
 			if i != len(res.Entries) {
 				rem := len(res.Entries) - i
-				log.WithFields(map[string]interface{}{
+				log.WithFields(log.Fields{
 					"cancel":    ctx.Err(),
 					"remaining": rem,
 				}).Warn("PageAllVolumes: cancelled w unprocessed results")
@@ -454,7 +454,7 @@ func PageSnapshots(
 			wg.Wait()
 			close(cerr)
 			close(csnap)
-			log.WithField("pages", pages).Debug("PageAllSnapshots: exit")
+			log.WithFields(log.Fields{"pages": pages}).Debug("PageAllSnapshots: exit")
 		}()
 
 		sendSnapshots := func(res *csi.ListSnapshotsResponse) {
@@ -474,7 +474,7 @@ func PageSnapshots(
 			// deduct the remaining number from the wait group.
 			if i != len(res.Entries) {
 				rem := len(res.Entries) - i
-				log.WithFields(map[string]interface{}{
+				log.WithFields(log.Fields{
 					"cancel":    ctx.Err(),
 					"remaining": rem,
 				}).Warn("PageAllSnapshots: cancelled w unprocessed results")
