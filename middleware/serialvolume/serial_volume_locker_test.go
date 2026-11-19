@@ -32,8 +32,8 @@ import (
 
 func TestCreateVolume(t *testing.T) {
 	locker := &defaultLockProvider{
-		volIDLocks:   map[string]gosync.TryLocker{},
-		volNameLocks: map[string]gosync.TryLocker{},
+		volIDLocks:   map[string]*refCountedLock{},
+		volNameLocks: map[string]*refCountedLock{},
 	}
 	interceptor := New(WithTimeout(1*time.Second), WithLockProvider(locker))
 

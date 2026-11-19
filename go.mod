@@ -3,7 +3,7 @@ module github.com/dell/gocsi
 go 1.27
 
 require (
-	github.com/dell/csmlog v1.2.0
+	github.com/dell/csmlog v1.2.1
 	github.com/akutz/gosync v0.1.0
 	github.com/akutz/memconn v0.1.0
 	github.com/container-storage-interface/spec v1.12.0
