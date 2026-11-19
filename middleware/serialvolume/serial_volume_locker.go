@@ -23,7 +23,6 @@ import (
 	"io"
 	"time"
 
-	"github.com/akutz/gosync"
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -79,8 +78,8 @@ func New(opts ...Option) grpc.UnaryServerInterceptor {
 	// in-memory provider.
 	if i.opts.locker == nil {
 		i.opts.locker = &defaultLockProvider{
-			volIDLocks:   map[string]gosync.TryLocker{},
-			volNameLocks: map[string]gosync.TryLocker{},
+			volIDLocks:   map[string]*refCountedLock{},
+			volNameLocks: map[string]*refCountedLock{},
 		}
 	}
 

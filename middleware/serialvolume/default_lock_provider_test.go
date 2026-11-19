@@ -20,15 +20,14 @@ package serialvolume
 
 import (
 	"context"
+	"io"
 	"testing"
-
-	"github.com/akutz/gosync"
 )
 
 func TestGetLockWithID(t *testing.T) {
 	provider := &defaultLockProvider{
-		volIDLocks:   make(map[string]gosync.TryLocker),
-		volNameLocks: make(map[string]gosync.TryLocker),
+		volIDLocks:   make(map[string]*refCountedLock),
+		volNameLocks: make(map[string]*refCountedLock),
 	}
 
 	ctx := context.Background()
@@ -43,20 +42,16 @@ func TestGetLockWithID(t *testing.T) {
 		t.Error("expected non-nil lock")
 	}
 
-	storedLock, exists := provider.volIDLocks[id]
+	_, exists := provider.volIDLocks[id]
 	if !exists {
 		t.Errorf("lock not found for ID %s", id)
-	}
-
-	if lock != storedLock {
-		t.Errorf("expected lock %v, got %v", lock, storedLock)
 	}
 }
 
 func TestGetLockWithName(t *testing.T) {
 	provider := &defaultLockProvider{
-		volIDLocks:   make(map[string]gosync.TryLocker),
-		volNameLocks: make(map[string]gosync.TryLocker),
+		volIDLocks:   make(map[string]*refCountedLock),
+		volNameLocks: make(map[string]*refCountedLock),
 	}
 
 	ctx := context.Background()
@@ -71,13 +66,90 @@ func TestGetLockWithName(t *testing.T) {
 		t.Error("expected non-nil lock")
 	}
 
-	// Ensure the lock is stored in the map
-	storedLock, exists := provider.volNameLocks[name]
+	_, exists := provider.volNameLocks[name]
 	if !exists {
 		t.Errorf("lock not found for name %s", name)
 	}
+}
 
-	if lock != storedLock {
-		t.Errorf("expected lock %v, got %v", lock, storedLock)
-	}
+func TestDefaultLockProviderCleanup(t *testing.T) {
+	t.Run("ID lock evicted after Close", func(t *testing.T) {
+		provider := &defaultLockProvider{
+			volIDLocks:   make(map[string]*refCountedLock),
+			volNameLocks: make(map[string]*refCountedLock),
+		}
+
+		lock, err := provider.GetLockWithID(context.Background(), "vol-1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(provider.volIDLocks) != 1 {
+			t.Fatalf("expected 1 entry, got %d", len(provider.volIDLocks))
+		}
+
+		lock.(io.Closer).Close()
+		if len(provider.volIDLocks) != 0 {
+			t.Fatalf("expected 0 entries after Close, got %d", len(provider.volIDLocks))
+		}
+	})
+
+	t.Run("Name lock evicted after Close", func(t *testing.T) {
+		provider := &defaultLockProvider{
+			volIDLocks:   make(map[string]*refCountedLock),
+			volNameLocks: make(map[string]*refCountedLock),
+		}
+
+		lock, err := provider.GetLockWithName(context.Background(), "vol-name")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(provider.volNameLocks) != 1 {
+			t.Fatalf("expected 1 entry, got %d", len(provider.volNameLocks))
+		}
+
+		lock.(io.Closer).Close()
+		if len(provider.volNameLocks) != 0 {
+			t.Fatalf("expected 0 entries after Close, got %d", len(provider.volNameLocks))
+		}
+	})
+
+	t.Run("Concurrent references keep entry alive", func(t *testing.T) {
+		provider := &defaultLockProvider{
+			volIDLocks:   make(map[string]*refCountedLock),
+			volNameLocks: make(map[string]*refCountedLock),
+		}
+
+		ctx := context.Background()
+		lock1, _ := provider.GetLockWithID(ctx, "vol-1")
+		lock2, _ := provider.GetLockWithID(ctx, "vol-1")
+
+		if provider.volIDLocks["vol-1"].refCount != 2 {
+			t.Fatalf("expected refCount 2, got %d", provider.volIDLocks["vol-1"].refCount)
+		}
+
+		lock1.(io.Closer).Close()
+		if len(provider.volIDLocks) != 1 {
+			t.Fatal("entry should still exist with one reference")
+		}
+
+		lock2.(io.Closer).Close()
+		if len(provider.volIDLocks) != 0 {
+			t.Fatal("entry should be evicted after all references released")
+		}
+	})
+
+	t.Run("Close is idempotent", func(t *testing.T) {
+		provider := &defaultLockProvider{
+			volIDLocks:   make(map[string]*refCountedLock),
+			volNameLocks: make(map[string]*refCountedLock),
+		}
+
+		lock, _ := provider.GetLockWithID(context.Background(), "vol-1")
+		closer := lock.(io.Closer)
+		closer.Close()
+		closer.Close() // should not panic or double-decrement
+		if len(provider.volIDLocks) != 0 {
+			t.Fatal("expected 0 entries")
+		}
+	})
 }
